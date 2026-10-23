@@ -52,7 +52,7 @@
     let p = st && st.params;
     if (p && p.whyKey) p = { ...p, why: t(p.whyKey, p.whyParams) };
     if (p && p.meters) p = { ...p, d: fmtDist(p.meters) };
-    s.textContent = st ? t(st.key, p) : '';
+    s.textContent = st ? t(st.key, p) + (p && p.detail ? ' [' + p.detail + ']' : '') : '';
     s.classList.toggle('error', !!(st && st.error));
   }
   function showManual(key) { $('manual').hidden = false; state.manualKey = key || 'manual.tap'; $('manual-text').textContent = t(state.manualKey); }
@@ -67,17 +67,17 @@
   function nameOf(x) { const loc = x.tags && x.tags['name:' + I18n.getLang()]; return loc || x.name || t('name.default'); }
 
   function bottomPad() { return window.matchMedia('(min-width:900px)').matches ? 40 : Math.min($('panel').offsetHeight, window.innerHeight * 0.62) + 24; }
-  let lastFit = null;
-  function fit(points) {
-    lastFit = points;
+  let lastFit = null, lastZoom = 18;
+  function fit(points, maxZoom) {
+    lastFit = points; lastZoom = maxZoom;
     map.invalidateSize();
     const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lon]));
-    map.fitBounds(bounds, { paddingTopLeft: [40, 40], paddingBottomRight: [40, bottomPad()], maxZoom: 18, animate: false });
+    map.fitBounds(bounds, { paddingTopLeft: [40, 40], paddingBottomRight: [40, bottomPad()], maxZoom: maxZoom || 18, animate: false });
   }
   // se il pannello cambia altezza (es. si apre «Indicazioni passo passo») la mappa si riadatta per non coprire il percorso
   if (window.ResizeObserver) {
     let timer = null;
-    new ResizeObserver(() => { clearTimeout(timer); timer = setTimeout(() => { if (lastFit) fit(lastFit); }, 120); }).observe($('panel'));
+    new ResizeObserver(() => { clearTimeout(timer); timer = setTimeout(() => { if (lastFit) fit(lastFit, lastZoom); }, 120); }).observe($('panel'));
   }
 
   function renderOrigin() {
@@ -235,7 +235,8 @@
 
   async function search() {
     const o = state.origin, mine = ++state.serial, radius = RADII[state.radius];
-    renderOrigin(); map.setView([o.lat, o.lon], state.radius ? 15 : 16, { animate: false });   // senza animazione: altrimenti la fine dell'animazione annulla il successivo fitBounds
+    renderOrigin(); fit([o], state.radius ? 15 : 16);   // il punto resta nella parte di mappa non coperta dal pannello
+    //   // senza animazione: altrimenti la fine dell'animazione annulla il successivo fitBounds
     busy(true);
     try {
       state.cached = false;
@@ -255,7 +256,7 @@
       await select(state.turets[0]);
     } catch (e) {
       const whyKey = !navigator.onLine ? 'why.offline' : e && e.http ? 'why.http' : e && e.timeout ? 'why.timeout' : 'why.unreachable';
-      setStatus('status.loadFail', { whyKey, whyParams: { code: e && e.http } }, true);
+      setStatus('status.loadFail', { whyKey, whyParams: { code: e && e.http }, detail: e && e.detail }, true);
       if (e && e.detail) console.warn('Overpass:', e.detail);
     } finally { busy(false); }
   }
