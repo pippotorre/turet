@@ -5,7 +5,7 @@
     <linearGradient id="horn" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8cc3a8"/><stop offset="1" stop-color="#d6ecdf"/></linearGradient>
     <linearGradient id="water" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5cb8dc"/><stop offset=".5" stop-color="#d6f1fb"/><stop offset="1" stop-color="#2b8fb5"/></linearGradient>
     <g id="side">
-      <path d="M152 184C118 182 94 160 82 122C77 106 72 94 76 88C92 98 112 118 140 138C152 147 162 152 170 160Z" fill="url(#horn)" stroke="#16382c" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M152 186C132 186 116 176 108 158C104 150 102 144 104 140C114 143 128 150 142 160C152 167 160 172 168 176Z" fill="url(#horn)" stroke="#16382c" stroke-width="6" stroke-linejoin="round"/>
       <path d="M150 192C108 176 90 198 88 214C112 238 138 230 154 220Z" fill="#4a9373" stroke="#16382c" stroke-width="6" stroke-linejoin="round"/>
       <path d="M104 206C116 210 130 214 144 214" fill="none" stroke="#2f6f55" stroke-width="5" stroke-linecap="round"/>
     </g>
