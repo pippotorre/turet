@@ -13,60 +13,71 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Turet">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
-  <link rel="stylesheet" href="css/app.css?v=1">
+  <link rel="stylesheet" href="css/app.css?v=2">
 </head>
 <body>
   <div class="app">
-    <main id="map" aria-label="Mappa dei turet"></main>
+    <main id="map" aria-label="Mappa dei turet" data-i18n-attr="aria-label:map.label"></main>
 
     <aside class="panel" id="panel">
       <header class="brand">
         <img src="img/icon-192.png" alt="" width="44" height="44">
-        <div>
+        <div class="brand-text">
           <h1>Turet</h1>
-          <p>Il toret più vicino, a due passi.</p>
+          <p data-i18n="tagline">Il turet più vicino, a due passi.</p>
+        </div>
+        <div class="lang" role="group" aria-label="Lingua" data-i18n-attr="aria-label:lang.label">
+          <button type="button" data-lang="it" lang="it" title="Italiano" aria-pressed="false">IT</button>
+          <button type="button" data-lang="en" lang="en" title="English" aria-pressed="false">EN</button>
+          <button type="button" data-lang="fr" lang="fr" title="Français" aria-pressed="false">FR</button>
         </div>
       </header>
 
-      <button type="button" id="find" class="primary">Trova il turet più vicino</button>
+      <details class="about">
+        <summary data-i18n="about.summary">Che cos’è un turet?</summary>
+        <p data-i18n="about.text">Il turet è la fontanella torinese in ghisa con la testa di toro: l’acqua è potabile e gratuita.</p>
+      </details>
+
+      <button type="button" id="find" class="primary" data-i18n="find">Trova il turet più vicino</button>
       <p id="status" class="status" role="status" aria-live="polite"></p>
 
       <section id="manual" class="manual" hidden>
-        <p id="manual-text">Tocca la mappa per indicare dove sei.</p>
-        <button type="button" id="goto-torino" class="secondary">Vai al centro di Torino</button>
+        <p id="manual-text" data-i18n="manual.tap">Tocca la mappa per indicare dove sei.</p>
+        <button type="button" id="goto-torino" class="secondary" data-i18n="manual.torino">Vai al centro di Torino</button>
       </section>
 
       <section id="result" class="card" hidden aria-labelledby="r-name">
-        <p class="eyebrow">Il più vicino</p>
+        <p class="eyebrow" data-i18n="card.nearest">Il più vicino</p>
         <h2 id="r-name">Turet</h2>
         <p id="r-meta" class="meta"></p>
         <p id="r-note" class="note" hidden></p>
         <div class="actions">
-          <a id="open-google" class="button secondary" target="_blank" rel="noopener">Apri in Google Maps</a>
-          <a id="open-apple" class="button secondary" target="_blank" rel="noopener" hidden>Apri in Mappe di Apple</a>
+          <a id="open-google" class="button secondary" target="_blank" rel="noopener" data-i18n="open.google">Apri in Google Maps</a>
+          <a id="open-apple" class="button secondary" target="_blank" rel="noopener" hidden data-i18n="open.apple">Apri in Mappe di Apple</a>
         </div>
         <details id="steps-box" class="steps" hidden>
-          <summary>Indicazioni passo passo</summary>
+          <summary data-i18n="steps.summary">Indicazioni passo passo</summary>
           <ol id="steps"></ol>
         </details>
       </section>
 
       <section id="others" class="others" hidden>
-        <h3>Altri turet vicini</h3>
+        <h3 data-i18n="others">Altri turet vicini</h3>
         <ol id="list"></ol>
       </section>
 
       <footer class="credits">
-        <button type="button" id="install" class="linklike" hidden>Installa l’app</button>
-        <p>Mappe e posizione dei turet: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori di OpenStreetMap</a>. Percorsi: <a href="https://routing.openstreetmap.de/" target="_blank" rel="noopener">routing.openstreetmap.de</a>.</p>
-        <p>La tua posizione resta sul telefono: ai servizi di dati va solo un punto arrotondato (circa 100 m) per cercare i turet e, quando disegni il percorso, le due coordinate del tragitto.</p>
+        <button type="button" id="install" class="linklike" hidden data-i18n="install">Installa l’app</button>
+        <p data-i18n-html="credits.map"></p>
+        <p data-i18n="credits.privacy"></p>
       </footer>
     </aside>
   </div>
 
-  <noscript><p class="noscript">Per usare la mappa serve JavaScript.</p></noscript>
+  <noscript><p class="noscript">JavaScript is required · Per usare la mappa serve JavaScript · JavaScript est nécessaire.</p></noscript>
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="js/geo.js?v=1"></script>
-  <script src="js/app.js?v=1"></script>
+  <script src="js/i18n.js?v=2"></script>
+  <script src="js/geo.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
 </body>
 </html>

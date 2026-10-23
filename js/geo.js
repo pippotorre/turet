@@ -20,10 +20,10 @@
     return points.map((p) => ({ ...p, distance: haversine(origin, p) })).sort((x, y) => x.distance - y.distance);
   }
 
-  function formatDistance(m) {
+  function formatDistance(m, decimal) {
     if (!Number.isFinite(m)) return '—';
     if (m < 950) return Math.max(10, Math.round(m / 10) * 10) + ' m';
-    return (m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.', ',') + ' km';
+    return (m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.', decimal || ',') + ' km';
   }
 
   function walkMinutes(m) { return Math.max(1, Math.round(m / WALK_M_PER_MIN)); }
@@ -54,34 +54,32 @@
     return out;
   }
 
-  const SIDE = {
-    left: 'a sinistra', right: 'a destra', 'slight left': 'leggermente a sinistra', 'slight right': 'leggermente a destra',
-    'sharp left': 'decisamente a sinistra', 'sharp right': 'decisamente a destra', straight: 'dritto', uturn: 'con inversione a U',
-  };
-
-  /** Istruzione in italiano da un passo OSRM ({maneuver:{type,modifier,exit}, name}). */
-  function instruction(step) {
-    const m = step.maneuver || {}, name = (step.name || '').trim(), on = name ? ' su ' + name : '';
-    const side = SIDE[m.modifier] || '';
+  /** Istruzione di percorso da un passo OSRM ({maneuver:{type,modifier,exit}, name}), nella lingua di `i18n` (oggetto con t() e ordinal()). */
+  function instruction(step, i18n) {
+    const t = i18n.t, m = step.maneuver || {}, name = (step.name || '').trim();
+    const on = name ? t('on', { name }) : '', onto = name ? t('onto', { name }) : '';
+    const side = m.modifier && m.modifier !== 'straight' && m.modifier !== 'uturn' ? t('side.' + m.modifier) : t('side.right');
     switch (m.type) {
-      case 'depart': return 'Parti' + on;
-      case 'arrive': return 'Sei arrivato al turet' + (m.modifier === 'left' ? ' (sul lato sinistro)' : m.modifier === 'right' ? ' (sul lato destro)' : '');
-      case 'turn': return m.modifier === 'uturn' ? 'Inverti la marcia' + on : 'Svolta ' + (side || 'a destra') + on;
-      case 'end of road': return 'Alla fine della strada svolta ' + (side || 'a destra') + on;
-      case 'fork': return 'Al bivio tieni la ' + (/left/.test(m.modifier || '') ? 'sinistra' : 'destra') + on;
-      case 'merge': return 'Immettiti' + on;
-      case 'roundabout': case 'rotary': return 'Alla rotonda prendi la ' + (m.exit || 1) + 'ª uscita' + on;
-      case 'roundabout turn': return 'Alla rotonda svolta ' + (side || 'a destra') + on;
-      case 'new name': case 'continue': return 'Prosegui' + (name ? ' su ' + name : '');
-      default: return 'Prosegui' + on;
+      case 'depart': return t('step.depart', { on });
+      case 'arrive': return t('step.arrive') + (m.modifier === 'left' ? t('step.arrive.left') : m.modifier === 'right' ? t('step.arrive.right') : '');
+      case 'turn':
+        if (m.modifier === 'uturn') return t('step.uturn', { on });
+        if (m.modifier === 'straight') return t('step.straight', { on });
+        return t('step.turn', { side, onto });
+      case 'end of road': return t('step.endroad', { side, onto });
+      case 'fork': return t(/left/.test(m.modifier || '') ? 'step.fork.left' : 'step.fork.right', { on });
+      case 'merge': return t('step.merge', { on });
+      case 'roundabout': case 'rotary': return t('step.roundabout', { ord: i18n.ordinal(m.exit || 1), on });
+      case 'roundabout turn': return t('step.roundaboutTurn', { side, onto });
+      default: return t('step.continue', { on });
     }
   }
 
   /** Url per proseguire con le app di mappe del telefono. */
-  function mapsLinks(from, to) {
+  function mapsLinks(from, to, lang) {
     const d = to.lat + ',' + to.lon;
     return {
-      google: 'https://www.google.com/maps/dir/?api=1&origin=' + from.lat + ',' + from.lon + '&destination=' + d + '&travelmode=walking',
+      google: 'https://www.google.com/maps/dir/?api=1&origin=' + from.lat + ',' + from.lon + '&destination=' + d + '&travelmode=walking' + (lang ? '&hl=' + encodeURIComponent(lang) : ''),
       apple: 'https://maps.apple.com/?saddr=' + from.lat + ',' + from.lon + '&daddr=' + d + '&dirflg=w',
     };
   }

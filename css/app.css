@@ -20,6 +20,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(
 
 .brand{display:flex;align-items:center;gap:.75rem}
 .brand img{border-radius:12px;flex:none}
+.brand-text{flex:1;min-width:0}
 .brand h1{margin:0;font-size:1.5rem;line-height:1.1;letter-spacing:-.01em}
 .brand p{margin:.1rem 0 0;color:var(--sfumato);font-size:.92rem}
 
@@ -79,3 +80,13 @@ button,.button{font:inherit;font-weight:650;border-radius:14px;border:2px solid 
   .panel::before{display:none}
 }
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* selettore di lingua */
+.lang{display:flex;gap:2px;flex:none;align-self:flex-start;background:var(--verde-chiaro);border-radius:12px;padding:2px}
+.lang button{min-height:36px;min-width:40px;padding:.2rem .5rem;border-radius:10px;background:transparent;color:var(--testo);font-size:.82rem;font-weight:700;border:2px solid transparent}
+.lang button[aria-pressed="true"]{background:var(--verde);color:#fff}
+.lang button:not([aria-pressed="true"]):hover{background:var(--scheda)}
+.about{font-size:.92rem;color:var(--sfumato)}
+.about summary{cursor:pointer;font-weight:600;color:var(--verde);min-height:32px;display:flex;align-items:center}
+@media (prefers-color-scheme: dark){.about summary{color:#9bd3b9}}
+.about p{margin:.1rem 0 .2rem}
