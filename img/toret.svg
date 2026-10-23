@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" role="img" aria-label="Toret">
+  <defs>
+    <linearGradient id="plaque" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3f8a68"/><stop offset="1" stop-color="#1f4d3b"/></linearGradient>
+    <linearGradient id="head" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fb591"/><stop offset="1" stop-color="#3f8a68"/></linearGradient>
+    <linearGradient id="horn" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8cc3a8"/><stop offset="1" stop-color="#d6ecdf"/></linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5cb8dc"/><stop offset=".5" stop-color="#d6f1fb"/><stop offset="1" stop-color="#2b8fb5"/></linearGradient>
+    <g id="side">
+      <path d="M152 184C118 182 94 160 82 122C77 106 72 94 76 88C92 98 112 118 140 138C152 147 162 152 170 160Z" fill="url(#horn)" stroke="#16382c" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M150 192C108 176 90 198 88 214C112 238 138 230 154 220Z" fill="#4a9373" stroke="#16382c" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M104 206C116 210 130 214 144 214" fill="none" stroke="#2f6f55" stroke-width="5" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <ellipse cx="173" cy="228" rx="10" ry="8" fill="#16382c"/><circle cx="170" cy="225" r="3" fill="#fff"/>
+      <path d="M156 212Q172 204 190 214" fill="none" stroke="#16382c" stroke-width="6" stroke-linecap="round"/>
+      <path d="M160 246C164 272 172 292 184 306" fill="none" stroke="#8cc3a8" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+    </g>
+  </defs>
+  <!-- targa ad arco -->
+  <path d="M40 464V196C40 82 108 22 200 22C292 22 360 82 360 196V464Z" fill="url(#plaque)" stroke="#16382c" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M62 452V198C62 100 120 46 200 46C280 46 338 100 338 198V452Z" fill="none" stroke="#7cc2a1" stroke-width="5" stroke-dasharray="2 13" stroke-linecap="round"/>
+  <path d="M76 452V198C76 110 126 62 200 62C274 62 324 110 324 198V452Z" fill="none" stroke="#2a6a50" stroke-width="3"/>
+  <!-- testa di toro -->
+  <use href="#side"/>
+  <g transform="translate(400 0) scale(-1 1)"><use href="#side"/></g>
+  <path d="M150 182Q200 158 250 182C262 216 252 262 238 300Q232 330 214 342Q200 350 186 342Q168 330 162 300C148 262 138 216 150 182Z" fill="url(#head)" stroke="#16382c" stroke-width="6" stroke-linejoin="round"/>
+  <use href="#face"/>
+  <g transform="translate(400 0) scale(-1 1)"><use href="#face"/></g>
+  <path d="M178 186Q200 176 222 186" fill="none" stroke="#b9e0cd" stroke-width="5" stroke-linecap="round" opacity=".8"/>
+  <path d="M176 196Q200 206 224 196" fill="none" stroke="#2f6f55" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+  <ellipse cx="200" cy="322" rx="35" ry="23" fill="#a6d6bf" stroke="#16382c" stroke-width="5"/>
+  <ellipse cx="187" cy="318" rx="5" ry="7" fill="#16382c"/><ellipse cx="213" cy="318" rx="5" ry="7" fill="#16382c"/>
+  <!-- bocca e getto -->
+  <rect x="190" y="338" width="20" height="16" rx="4" fill="#d99a2b" stroke="#16382c" stroke-width="4"/>
+  <path d="M196 354C195 384 194 410 192 438L208 438C206 410 205 384 204 354Z" fill="url(#water)" stroke="#1d6f90" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M199 360C198.5 384 198 408 197 430" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".85"/>
+  <path d="M150 446Q175 432 192 440M208 440Q225 432 250 446" fill="none" stroke="#5cb8dc" stroke-width="5" stroke-linecap="round"/>
+  <g fill="#8fd3ee" stroke="#1d6f90" stroke-width="2"><circle cx="164" cy="428" r="4"/><circle cx="236" cy="426" r="4"/><circle cx="148" cy="414" r="3"/><circle cx="254" cy="416" r="3"/></g>
+</svg>
