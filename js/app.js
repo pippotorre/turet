@@ -33,7 +33,7 @@
   function setLanguage(code, save) {
     I18n.setLang(code);
     if (save) { try { localStorage.setItem(LANG_KEY, code); } catch (e) {} }
-    applyStatic(); refreshDynamic();
+    applyStatic(); refreshDynamic(); renderNet();
   }
 
   /* ---------- mappa ---------- */
@@ -262,7 +262,13 @@
 
   function setOrigin(o) { state.origin = o; state.radius = 0; return search(); }
 
+  function renderNet() { $('net').hidden = navigator.onLine !== false; }
+  window.addEventListener('online', () => { renderNet(); if (state.status && state.status.key === 'status.loadFail') setStatus(null); });
+  window.addEventListener('offline', renderNet);
+
   function locate() {
+    renderNet();
+    if (navigator.onLine === false) { $('net').scrollIntoView({ block: 'nearest' }); return; }   // senza rete non si può cercare: l'avviso invita a riconnettersi
     $('manual').hidden = true; state.manual = false;
     if (!navigator.geolocation) { enableManual('geo.unsupported'); return; }
     busy(true); setStatus('status.locating');
@@ -307,5 +313,6 @@
   if (isApple && !standalone()) { const b = $('install'); b.hidden = false; b.disabled = true; b.style.textDecoration = 'none'; }
 
   /* ---------- avvio ---------- */
+  renderNet();
   setLanguage(I18n.DICT[storedLang()] ? storedLang() : I18n.detect(navigator.languages || [navigator.language]), false);
 })();
