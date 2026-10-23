@@ -100,7 +100,7 @@
 
   function renderList() {
     const list = $('list'); list.replaceChildren();
-    for (const x of state.turets) {
+    for (const x of state.turets.slice(0, 12)) {
       const li = document.createElement('li'), b = document.createElement('button'), n = document.createElement('span'), d = document.createElement('small');
       b.type = 'button'; n.textContent = nameOf(x); d.textContent = fmtDist(x.distance);
       b.setAttribute('aria-current', String(!!state.selected && state.selected.id === x.id));
@@ -210,7 +210,7 @@
 
   // inquadratura: partenza, turet scelto e gli altri turet abbastanza vicini, in ogni direzione (non solo quello del percorso)
   function viewPoints(x) {
-    const limit = Math.max(x.distance * 3, 400);
+    const limit = state.radius ? Infinity : Math.max(x.distance * 3, 400);   // dopo «cerca più lontano» si inquadrano tutti i risultati
     return [state.origin, x, ...state.turets.filter((y) => y.id !== x.id && y.distance <= limit)];
   }
 
@@ -256,7 +256,7 @@
         if (!RADII[state.radius + 1]) showManual('status.noneManual');
         return;
       }
-      state.turets = Geo.sortByDistance(r.data, o).slice(0, 6);
+      state.turets = Geo.sortByDistance(r.data, o).slice(0, 60);
       state.selected = null;
       renderPins();
       await select(state.turets[0]);

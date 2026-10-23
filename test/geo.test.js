@@ -22,12 +22,16 @@ t('walkMinutes e formatDuration', () => {
 });
 t('overpassQuery arrotonda il centro e allarga il raggio', () => {
   const q = G.overpassQuery(45.070312, 7.686845, 1000);
-  assert(q.includes('(around:1150,45.07,7.687)'), q); assert(q.includes('"amenity"="drinking_water"')); assert(!q.includes('"fountain"="toret"'));
+  assert(q.includes('(around:1150,45.07,7.687)'), q); assert(q.includes('"amenity"="drinking_water"')); assert(q.includes('nwr')); assert(q.includes('out center'));
 });
 t('parseOverpass scarta elementi non validi', () => {
   const r = G.parseOverpass({ elements: [{ type: 'node', id: 1, lat: 45, lon: 7, tags: { name: 'Toret di prova' } }, { type: 'way', id: 2 }, { type: 'node', id: 3, lat: 'x', lon: 7 }, { type: 'node', id: 4, lat: 45.1, lon: 7.1 }] });
   assert.strictEqual(r.length, 2); assert.strictEqual(r[0].name, 'Toret di prova'); assert.strictEqual(r[1].name, '');
   assert.deepStrictEqual(G.parseOverpass(null), []); assert.deepStrictEqual(G.parseOverpass({}), []);
+});
+t('parseOverpass accetta aree con centro', () => {
+  const r = G.parseOverpass({ elements: [{ type: 'way', id: 7, center: { lat: 45.05, lon: 7.65 }, tags: { amenity: 'drinking_water' } }, { type: 'node', id: 7, lat: 45, lon: 7 }] });
+  assert.strictEqual(r.length, 2); assert.notStrictEqual(r[0].id, r[1].id); assert.strictEqual(r[0].lat, 45.05);
 });
 t('instruction in italiano', () => {
   I.setLang('it');

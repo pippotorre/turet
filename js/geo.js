@@ -42,16 +42,18 @@
     const r = Math.round(radius + 150);        // margine per compensare l'arrotondamento del centro
     const at = '(around:' + r + ',' + roundCoord(lat) + ',' + roundCoord(lon) + ')';
     // tutti i punti d'acqua potabile pubblici (a Torino sono in gran parte toret, ma molti non hanno il tag fountain=toret) + fontane marcate come potabili
-    return '[out:json][timeout:25];(node["amenity"="drinking_water"]' + at + ';node["amenity"="fountain"]["drinking_water"="yes"]' + at + ';);out body;';
+    // tutti i punti d'acqua potabile (nodi, aree e relazioni): a Torino sono in gran parte toret, ma non tutti hanno il tag fountain=toret
+    return '[out:json][timeout:25];(nwr["amenity"="drinking_water"]' + at + ';nwr["fountain"="toret"]' + at + ';nwr["amenity"="fountain"]["drinking_water"="yes"]' + at + ';);out center body;';
   }
 
   /** Estrae dalla risposta di Overpass solo nodi con coordinate valide. */
   function parseOverpass(json) {
     const out = [];
     for (const el of (json && Array.isArray(json.elements) ? json.elements : [])) {
-      if (el.type !== 'node' || !Number.isFinite(el.lat) || !Number.isFinite(el.lon)) continue;
+      const lat = Number.isFinite(el.lat) ? el.lat : el.center && el.center.lat, lon = Number.isFinite(el.lon) ? el.lon : el.center && el.center.lon;   // aree e relazioni hanno il centro in `center`
+      if (!['node', 'way', 'relation'].includes(el.type) || !Number.isFinite(lat) || !Number.isFinite(lon)) continue;
       const tags = el.tags || {};
-      out.push({ id: el.id, lat: el.lat, lon: el.lon, name: String(tags.name || tags.description || '').slice(0, 80), tags });
+      out.push({ id: el.type + el.id, lat, lon, name: String(tags.name || tags.description || '').slice(0, 80), tags });
     }
     return out;
   }
