@@ -23,7 +23,7 @@
   function formatDistance(m, decimal) {
     if (!Number.isFinite(m)) return '—';
     if (m < 950) return Math.max(10, Math.round(m / 10) * 10) + ' m';
-    return (m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.', decimal || ',') + ' km';
+    return (m / 1000).toFixed(m < 10000 ? 1 : 0).replace(/\.0$/, '').replace('.', decimal || ',') + ' km';
   }
 
   function walkMinutes(m) { return Math.max(1, Math.round(m / WALK_M_PER_MIN)); }

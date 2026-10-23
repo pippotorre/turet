@@ -7,14 +7,14 @@
   const t = (k, p) => I18n.t(k, p);
   const fmtDist = (m) => Geo.formatDistance(m, I18n.decimal());
   const TORINO = { lat: 45.0703, lon: 7.6869 };
-  const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+  const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
   const ROUTING = 'https://routing.openstreetmap.de/routed-foot/route/v1/foot/';
-  const RADII = [1000, 3000, 8000, 20000];            // si allarga finché trova qualcosa
+  const RADII = [1000, 2000, 3500, 5000];             // parte da 1 km, l'utente può estendere fino a 5 km
   const CACHE_KEY = 'turet.cache.v1', LANG_KEY = 'turet.lang', CACHE_MAX_AGE = 7 * 24 * 3600 * 1000;
   const isApple = /iphone|ipad|ipod/i.test(navigator.userAgent) || (/macintosh/i.test(navigator.userAgent) && 'ontouchend' in document);
 
   const state = { origin: null, turets: [], selected: null, route: null, manual: false, serial: 0, routeAbort: null,
-    status: null, manualKey: 'manual.tap', cached: false, busy: false };
+    status: null, manualKey: 'manual.tap', cached: false, busy: false, radius: 0 };
   const layers = { me: null, accuracy: null, route: null, pins: new Map() };
 
   /* ---------- lingua ---------- */
@@ -49,11 +49,19 @@
   function setStatus(key, params, error) { state.status = key ? { key, params, error: !!error } : null; renderStatus(); }
   function renderStatus() {
     const s = $('status'), st = state.status;
-    s.textContent = st ? t(st.key, st.params && st.params.whyKey ? { ...st.params, why: t(st.params.whyKey) } : st.params) : '';
+    let p = st && st.params;
+    if (p && p.whyKey) p = { ...p, why: t(p.whyKey, p.whyParams) };
+    if (p && p.meters) p = { ...p, d: fmtDist(p.meters) };
+    s.textContent = st ? t(st.key, p) : '';
     s.classList.toggle('error', !!(st && st.error));
   }
   function showManual(key) { $('manual').hidden = false; state.manualKey = key || 'manual.tap'; $('manual-text').textContent = t(state.manualKey); }
-  function busy(on) { state.busy = on; renderFind(); }
+  function busy(on) { state.busy = on; renderFind(); renderExtend(); }
+  function renderExtend() {
+    const b = $('extend'), next = RADII[state.radius + 1];
+    b.hidden = !state.origin || state.busy || !next;
+    if (next) b.textContent = t('extend', { d: fmtDist(next) });
+  }
   function renderFind() { $('find').disabled = state.busy; $('find').textContent = state.busy ? t('searching') : t(state.turets.length ? 'refresh' : 'find'); }
   const standalone = () => navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   function nameOf(x) { const loc = x.tags && x.tags['name:' + I18n.getLang()]; return loc || x.name || t('name.default'); }
@@ -135,7 +143,7 @@
 
   // dopo un cambio di lingua riscrive tutto ciò che è stato generato dal programma
   function refreshDynamic() {
-    renderFind(); renderStatus(); renderList(); renderPins();
+    renderFind(); renderExtend(); renderStatus(); renderList(); renderPins();
     if (!$('manual').hidden) $('manual-text').textContent = t(state.manualKey);
     if (state.selected) renderCard();
   }
@@ -158,11 +166,11 @@
     for (const url of OVERPASS) {
       try {
         const r = await timedFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }, 22000);
-        if (!r.ok) throw new Error('Overpass ' + r.status);
+        if (!r.ok) { const e = new Error('Overpass ' + r.status); e.http = r.status; throw e; }
         const data = Geo.parseOverpass(await r.json());
         writeCache(key, data);
         return { data, cached: false };
-      } catch (e) { lastError = e; }
+      } catch (e) { if (e.name === 'AbortError') e.timeout = true; if (!lastError || e.http) lastError = e; }
     }
     const hit = readCache()[key];
     if (hit && Date.now() - hit.ts < CACHE_MAX_AGE) return { data: hit.data, cached: true };
@@ -211,47 +219,54 @@
   }
 
   async function search() {
-    const o = state.origin, mine = ++state.serial;
-    renderOrigin(); map.setView([o.lat, o.lon], 16, { animate: false });   // senza animazione: altrimenti la fine dell'animazione annulla il successivo fitBounds
+    const o = state.origin, mine = ++state.serial, radius = RADII[state.radius];
+    renderOrigin(); map.setView([o.lat, o.lon], state.radius ? 15 : 16, { animate: false });   // senza animazione: altrimenti la fine dell'animazione annulla il successivo fitBounds
     busy(true);
     try {
-      let found = [];
       state.cached = false;
-      for (const radius of RADII) {
-        if (radius === RADII[0]) setStatus('status.searching'); else setStatus('status.widen', { d: fmtDist(radius) });
-        const r = await fetchTurets(o, radius);
-        if (mine !== state.serial) return;
-        state.cached = r.cached;
-        if (r.data.length) { found = r.data; break; }
-      }
-      if (!found.length) {
+      setStatus('status.searching');
+      const r = await fetchTurets(o, radius);
+      if (mine !== state.serial) return;
+      state.cached = r.cached;
+      if (!r.data.length) {
         state.turets = []; state.selected = null; state.route = null; renderPins(); renderList(); $('result').hidden = true;
-        setStatus('status.none', null, true);
-        showManual('status.noneManual');
+        setStatus('status.none', { meters: radius }, true);
+        if (!RADII[state.radius + 1]) showManual('status.noneManual');
         return;
       }
-      state.turets = Geo.sortByDistance(found, o).slice(0, 6);
+      state.turets = Geo.sortByDistance(r.data, o).slice(0, 6);
       state.selected = null;
       renderPins();
       await select(state.turets[0]);
     } catch (e) {
-      setStatus('status.loadFail', { whyKey: navigator.onLine ? 'why.unreachable' : 'why.offline' }, true);
+      const whyKey = !navigator.onLine ? 'why.offline' : e && e.http ? 'why.http' : e && e.timeout ? 'why.timeout' : 'why.unreachable';
+      setStatus('status.loadFail', { whyKey, whyParams: { code: e && e.http } }, true);
     } finally { busy(false); }
   }
 
-  function setOrigin(o) { state.origin = o; return search(); }
+  function setOrigin(o) { state.origin = o; state.radius = 0; return search(); }
 
   function locate() {
     $('manual').hidden = true; state.manual = false;
     if (!navigator.geolocation) { enableManual('geo.unsupported'); return; }
     busy(true); setStatus('status.locating');
-    navigator.geolocation.getCurrentPosition(
-      (p) => setOrigin({ lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy, source: 'gps' }),
-      (err) => {
-        busy(false); setStatus(null);
-        enableManual(err.code === 1 ? 'geo.denied' : err.code === 3 ? 'geo.timeout' : 'geo.unavailable');
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
+    let started = false;
+    const fail = (err) => { if (started) return; busy(false); setStatus(null); enableManual(err.code === 1 ? 'geo.denied' : err.code === 3 ? 'geo.timeout' : 'geo.unavailable'); };
+    const fix = (p) => ({ lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy, source: 'gps' });
+    // 1) posizione rapida (rete/cache): il punto compare subito e parte la ricerca
+    navigator.geolocation.getCurrentPosition((p) => {
+      if (started) return; started = true;
+      const first = fix(p); setOrigin(first);
+      // 2) posizione precisa (GPS): se è molto diversa dalla prima si rifà la ricerca da lì
+      navigator.geolocation.getCurrentPosition((q) => {
+        if (state.origin !== first) return;                      // nel frattempo l'utente ha scelto un altro punto
+        const better = fix(q);
+        if (Geo.haversine(first, better) < 60) { state.origin = better; renderOrigin(); } else setOrigin(better);
+      }, () => {}, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    }, () => {
+      // la posizione rapida non c'è: si prova direttamente con il GPS
+      navigator.geolocation.getCurrentPosition((p) => { if (!started) { started = true; setOrigin(fix(p)); } }, fail, { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 });
+    }, { enableHighAccuracy: false, timeout: 6000, maximumAge: 120000 });
   }
 
   function enableManual(key) { state.manual = true; showManual(key); map.getContainer().style.cursor = 'crosshair'; }
@@ -263,6 +278,7 @@
   });
 
   $('find').addEventListener('click', locate);
+  $('extend').addEventListener('click', () => { if (state.origin && RADII[state.radius + 1]) { state.radius++; search(); } });
   $('goto-torino').addEventListener('click', () => { map.setView([TORINO.lat, TORINO.lon], 15, { animate: false }); state.manual = true; map.getContainer().style.cursor = 'crosshair'; showManual('manual.tap'); });
   for (const b of document.querySelectorAll('.lang button')) b.addEventListener('click', () => setLanguage(b.dataset.lang, true));
 

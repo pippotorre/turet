@@ -18,8 +18,8 @@ t('detect sceglie la prima lingua supportata, altrimenti inglese', () => {
   assert.strictEqual(I.detect(['de', 'es']), 'en'); assert.strictEqual(I.detect([]), 'en'); assert.strictEqual(I.detect(undefined), 'en');
 });
 t('t() sostituisce i segnaposto e ripiega sull’italiano', () => {
-  I.setLang('en'); assert.strictEqual(I.t('status.widen', { d: '3 km' }), 'None nearby, widening the search to 3 km…');
-  assert.strictEqual(I.t('chiave.inesistente'), 'chiave.inesistente'); assert.strictEqual(I.t('status.widen'), 'None nearby, widening the search to {d}…');
+  I.setLang('en'); assert.strictEqual(I.t('extend', { d: '3 km' }), 'Search further (up to 3 km)');
+  assert.strictEqual(I.t('chiave.inesistente'), 'chiave.inesistente'); assert.strictEqual(I.t('extend'), 'Search further (up to {d})');
   I.setLang('xx'); assert.strictEqual(I.getLang(), 'en'); I.setLang('it');
 });
 t('ordinali', () => {
