@@ -208,6 +208,12 @@
     layers.route = L.polyline(latlngs, { color: '#2b8fb5', weight: 6, opacity: .9, dashArray: dashed ? '2 10' : null, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(map);
   }
 
+  // inquadratura: partenza, turet scelto e gli altri turet abbastanza vicini, in ogni direzione (non solo quello del percorso)
+  function viewPoints(x) {
+    const limit = Math.max(x.distance * 3, 400);
+    return [state.origin, x, ...state.turets.filter((y) => y.id !== x.id && y.distance <= limit)];
+  }
+
   async function select(x) {
     state.selected = x; state.route = null;
     for (const [id, m] of layers.pins) m.setIcon(pinIcon(id === x.id));
@@ -217,7 +223,7 @@
     renderCard();
     setStatus('status.routing');
     drawRoute([[state.origin.lat, state.origin.lon], [x.lat, x.lon]], true);
-    fit([state.origin, x]);
+    fit(viewPoints(x));
     const timer = setTimeout(() => ctl.abort(), 15000);
     try {
       const route = await fetchRoute(state.origin, x, ctl.signal);
@@ -226,7 +232,7 @@
       drawRoute(route.coords, false);
       renderCard();
       setStatus(state.cached ? 'status.offline' : null);
-      fit([state.origin, x, ...route.coords.filter((_, i) => i % Math.ceil(route.coords.length / 40) === 0).map(([lat, lon]) => ({ lat, lon }))]);
+      fit([...viewPoints(x), ...route.coords.filter((_, i) => i % Math.ceil(route.coords.length / 40) === 0).map(([lat, lon]) => ({ lat, lon }))]);
     } catch (e) {
       if (mine !== state.serial) return;
       setStatus('status.routeFail', null, true);

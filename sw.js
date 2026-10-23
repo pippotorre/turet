@@ -1,8 +1,8 @@
 /* Turet — service worker: salva il «guscio» dell'app (pagina, stili, script, Leaflet, icone) per aprirla anche con poca rete.
  * Mappe, dati dei turet e percorsi arrivano sempre da internet e non vengono mai salvati qui (i dati dei turet li ricorda l'app in localStorage).
  * Per forzare l'aggiornamento delle copie salvate cambia VERSION. */
-const VERSION = 'turet-v10';
-const SHELL = ['./', 'index.html', 'css/app.css?v=10', 'js/i18n.js?v=10', 'js/geo.js?v=10', 'js/app.js?v=10', 'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css', 'img/icon-192.png', 'img/toret.svg', 'manifest.webmanifest'];
+const VERSION = 'turet-v11';
+const SHELL = ['./', 'index.html', 'css/app.css?v=11', 'js/i18n.js?v=11', 'js/geo.js?v=11', 'js/app.js?v=11', 'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css', 'img/icon-192.png', 'img/toret.svg', 'manifest.webmanifest'];
 
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {

@@ -99,3 +99,5 @@ button,.button{font:inherit;font-weight:650;border-radius:14px;border:2px solid 
 @keyframes splash-out{to{opacity:0;visibility:hidden}}
 @media (prefers-color-scheme: dark){#splash{background:#16201b}#splash p{color:#eaf1ec}}
 @media (prefers-reduced-motion: reduce){#splash,#splash img{animation-duration:.01s}#splash{animation-delay:.8s}}
+
+.others .note{margin:-.3rem 0 .5rem;font-size:.85rem;color:var(--sfumato)}
