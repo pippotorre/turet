@@ -40,7 +40,9 @@
   /** Query Overpass: i turet (fontane in ghisa a testa di toro) attorno a un punto. */
   function overpassQuery(lat, lon, radius) {
     const r = Math.round(radius + 150);        // margine per compensare l'arrotondamento del centro
-    return '[out:json][timeout:25];node["amenity"="drinking_water"]["fountain"="toret"](around:' + r + ',' + roundCoord(lat) + ',' + roundCoord(lon) + ');out body;';
+    const at = '(around:' + r + ',' + roundCoord(lat) + ',' + roundCoord(lon) + ')';
+    // tutti i punti d'acqua potabile pubblici (a Torino sono in gran parte toret, ma molti non hanno il tag fountain=toret) + fontane marcate come potabili
+    return '[out:json][timeout:25];(node["amenity"="drinking_water"]' + at + ';node["amenity"="fountain"]["drinking_water"="yes"]' + at + ';);out body;';
   }
 
   /** Estrae dalla risposta di Overpass solo nodi con coordinate valide. */

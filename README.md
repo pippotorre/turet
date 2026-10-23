@@ -26,7 +26,7 @@ Per aggiornare dopo una modifica a CSS/JS cambia il numero `?v=` in `index.html`
 | Overpass (overpass-api.de, poi overpass.kumi.systems) | posizione dei turet | Gratuito, uso corretto. L'app invia un punto arrotondato a ~100 m. |
 | routing.openstreetmap.de (profilo a piedi) | percorso | Gratuito, senza garanzie di servizio. In caso di errore l'app ripiega sulla linea d'aria. |
 
-**Dati:** i turet sono i nodi `amenity=drinking_water` + `fountain=toret` di OpenStreetMap ([tag](https://wiki.openstreetmap.org/wiki/Tag:fountain=toret)). L'app è completa quanto lo è la mappatura: se manca un turet, si aggiunge su openstreetmap.org con quei due tag e compare in app senza altre modifiche.
+**Dati:** i punti d'acqua potabile di OpenStreetMap (`amenity=drinking_water`, più le `amenity=fountain` con `drinking_water=yes`). A Torino sono quasi tutti toret, ma non tutti hanno il tag `fountain=toret`, quindi cercare solo quello ne faceva perdere molti. Il Comune non pubblica un elenco dei toret tra gli open data (aperTO). L'app è completa quanto lo è la mappatura: se manca un punto, si aggiunge su openstreetmap.org e compare in app senza altre modifiche.
 
 ## Privacy
 La posizione non viene salvata né inviata a un server del progetto: resta nel browser. Ai servizi esterni vanno solo un punto arrotondato (ricerca) e le due coordinate del tragitto (percorso). Nel browser si salva solo la copia degli ultimi risultati (localStorage).

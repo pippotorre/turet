@@ -22,7 +22,7 @@ t('walkMinutes e formatDuration', () => {
 });
 t('overpassQuery arrotonda il centro e allarga il raggio', () => {
   const q = G.overpassQuery(45.070312, 7.686845, 1000);
-  assert(q.includes('(around:1150,45.07,7.687)'), q); assert(q.includes('"fountain"="toret"')); assert(q.includes('"amenity"="drinking_water"'));
+  assert(q.includes('(around:1150,45.07,7.687)'), q); assert(q.includes('"amenity"="drinking_water"')); assert(!q.includes('"fountain"="toret"'));
 });
 t('parseOverpass scarta elementi non validi', () => {
   const r = G.parseOverpass({ elements: [{ type: 'node', id: 1, lat: 45, lon: 7, tags: { name: 'Toret di prova' } }, { type: 'way', id: 2 }, { type: 'node', id: 3, lat: 'x', lon: 7 }, { type: 'node', id: 4, lat: 45.1, lon: 7.1 }] });
