@@ -13,6 +13,7 @@
   const CACHE_KEY = 'turet.cache.v1', LANG_KEY = 'turet.lang', CACHE_MAX_AGE = 7 * 24 * 3600 * 1000;
   const isApple = /iphone|ipad|ipod/i.test(navigator.userAgent) || (/macintosh/i.test(navigator.userAgent) && 'ontouchend' in document);
 
+  const PINS = 10;
   const state = { origin: null, turets: [], selected: null, route: null, manual: false, serial: 0, routeAbort: null,
     status: null, manualKey: 'manual.tap', cached: false, busy: false, radius: 0 };
   const layers = { me: null, accuracy: null, route: null, pins: new Map() };
@@ -43,7 +44,7 @@
   }).addTo(map);
 
   const pinSvg = '<svg viewBox="0 0 34 42" aria-hidden="true"><path class="body" d="M17 1C8.7 1 2 7.6 2 15.8 2 26.5 17 41 17 41s15-14.5 15-25.2C32 7.6 25.3 1 17 1z" stroke="#fff" stroke-width="2.5"/><path d="M17 9c-3.5 4.5-5.5 7.3-5.5 10a5.5 5.5 0 0 0 11 0c0-2.7-2-5.5-5.5-10z" fill="#fff"/></svg>';
-  const pinIcon = (sel) => L.divIcon({ className: '', html: '<div class="pin' + (sel ? ' sel' : '') + '">' + pinSvg + '</div>', iconSize: [34, 42], iconAnchor: [17, 41] });
+  const pinIcon = (sel) => L.divIcon({ className: '', html: '<div class="pin' + (sel ? ' sel' : '') + '">' + pinSvg + '</div>', iconSize: [26, 32], iconAnchor: [13, 31] });
 
   /* ---------- interfaccia ---------- */
   function setStatus(key, params, error) { state.status = key ? { key, params, error: !!error } : null; renderStatus(); }
@@ -91,7 +92,9 @@
   function renderPins() {
     for (const m of layers.pins.values()) map.removeLayer(m);
     layers.pins.clear();
-    for (const x of state.turets) {
+    const shown = state.turets.slice(0, PINS);      // sulla mappa solo i più vicini: troppi segnaposto sovrapposti non si leggono
+    if (state.selected && !shown.includes(state.selected)) shown.push(state.selected);
+    for (const x of shown) {
       const m = L.marker([x.lat, x.lon], { icon: pinIcon(state.selected && state.selected.id === x.id), title: nameOf(x), alt: t('pin.alt', { name: nameOf(x), d: fmtDist(x.distance) }) }).addTo(map);
       m.on('click', () => select(x));
       layers.pins.set(x.id, m);
@@ -211,19 +214,20 @@
   // inquadratura: partenza, turet scelto e gli altri turet abbastanza vicini, in ogni direzione (non solo quello del percorso)
   function viewPoints(x) {
     const limit = state.radius ? Infinity : Math.max(x.distance * 3, 400);   // dopo «cerca più lontano» si inquadrano tutti i risultati
-    return [state.origin, x, ...state.turets.filter((y) => y.id !== x.id && y.distance <= limit)];
+    return [state.origin, x, ...state.turets.slice(0, PINS).filter((y) => y.id !== x.id && y.distance <= limit)];
   }
 
-  async function select(x) {
+  async function select(x, overview) {
     state.selected = x; state.route = null;
-    for (const [id, m] of layers.pins) m.setIcon(pinIcon(id === x.id));
+    renderPins();
     renderList();
     if (state.routeAbort) state.routeAbort.abort();
     const ctl = state.routeAbort = new AbortController(), mine = ++state.serial;
     renderCard();
     setStatus('status.routing');
     drawRoute([[state.origin.lat, state.origin.lon], [x.lat, x.lon]], true);
-    fit(viewPoints(x));
+    fit(overview ? viewPoints(x) : [state.origin, x]);
+    if (!overview) $('panel').scrollTo({ top: 0, behavior: 'smooth' });   // la scheda con il percorso sta in cima al pannello
     const timer = setTimeout(() => ctl.abort(), 15000);
     try {
       const route = await fetchRoute(state.origin, x, ctl.signal);
@@ -232,7 +236,7 @@
       drawRoute(route.coords, false);
       renderCard();
       setStatus(state.cached ? 'status.offline' : null);
-      fit([...viewPoints(x), ...route.coords.filter((_, i) => i % Math.ceil(route.coords.length / 40) === 0).map(([lat, lon]) => ({ lat, lon }))]);
+      fit([...(overview ? viewPoints(x) : [state.origin, x]), ...route.coords.filter((_, i) => i % Math.ceil(route.coords.length / 40) === 0).map(([lat, lon]) => ({ lat, lon }))]);
     } catch (e) {
       if (mine !== state.serial) return;
       setStatus('status.routeFail', null, true);
@@ -259,7 +263,7 @@
       state.turets = Geo.sortByDistance(r.data, o).slice(0, 60);
       state.selected = null;
       renderPins();
-      await select(state.turets[0]);
+      await select(state.turets[0], true);
     } catch (e) {
       const whyKey = !navigator.onLine ? 'why.offline' : e && e.http ? 'why.http' : e && e.timeout ? 'why.timeout' : 'why.unreachable';
       setStatus('status.loadFail', { whyKey, whyParams: { code: e && e.http }, detail: e && e.detail }, true);
