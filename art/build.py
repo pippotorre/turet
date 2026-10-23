@@ -1,6 +1,7 @@
-import asyncio, re
+import asyncio, re, os
 from playwright.async_api import async_playwright
-svg=open('/home/claude/turet/art/toret.svg').read()
+ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+svg=open(ROOT+'/art/toret.svg').read()
 BG='#f3ead6'
 def fig(h): 
     w=h*400/480
@@ -10,7 +11,7 @@ def tile(size, h, radius=0, bg=BG):
 async def shot(b, html, w, h, out, transparent=True):
     pg=await b.new_page(viewport={'width':w,'height':h}); await pg.set_content(html); await pg.screenshot(path=out, omit_background=transparent); await pg.close()
 async def main():
-    I='/home/claude/turet/img/'; S='/home/claude/turet/store/'
+    I=ROOT+'/img/'; S=ROOT+'/store/'
     async with async_playwright() as p:
         b=await p.chromium.launch()
         await shot(b,tile(512,410,112),512,512,I+'icon-512.png')

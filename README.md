@@ -4,26 +4,28 @@ Web app (installabile come app su Android e iPhone) che trova il **toret** — l
 
 ## Cosa fa
 - Rileva la posizione (GPS del telefono) oppure, se rifiuti o non c'è, ti lascia toccare la mappa per indicare dove sei.
-- Cerca i turet attorno a te in OpenStreetMap (raggio di 1, 3, 8 e 20 km, finché ne trova), mostra il più vicino e gli altri 5.
-- Disegna il percorso a piedi con distanza, tempo e indicazioni passo passo in italiano; se il servizio dei percorsi non risponde mostra la linea d'aria.
+- Cerca i turet attorno a te in OpenStreetMap a partire da 1 km; con «Cerca più lontano» si estende a 2, 3,5 e 5 km. Mostra il più vicino e gli altri (fino a 12 in lista, 60 sulla mappa).
+- Disegna il percorso a piedi con distanza, tempo e indicazioni passo passo nella lingua scelta; se il servizio dei percorsi non risponde mostra la linea d'aria.
 - Pulsanti per proseguire con Google Maps (e Mappe di Apple su iPhone/iPad).
 - Funziona offline in parte: l'app si apre e ricorda gli ultimi turet visti per la zona (7 giorni); mappe e percorsi richiedono internet.
 
 ## Pubblicazione
 Sito statico: basta copiare i file in una cartella raggiungibile in **HTTPS** (la posizione del telefono funziona solo su HTTPS), per esempio `https://www.entratadisicurezza.com/turet/`. Va bene anche GitHub Pages. Non servono PHP, database o chiavi.
-Per aggiornare dopo una modifica a CSS/JS cambia il numero `?v=` in `index.html` e in `sw.js` (e `VERSION` in `sw.js`).
+Per aggiornare dopo una modifica a CSS/JS cambia il numero `?v=` in `index.html` e in `sw.js`, e `VERSION` in `sw.js`, altrimenti i telefoni continuano a usare la copia vecchia.
 
 ## Struttura
-- `index.html`, `css/app.css`, `js/app.js` (interfaccia e flusso), `js/geo.js` (funzioni pure: distanze, query, istruzioni in italiano).
+- `index.html`, `css/app.css`, `js/app.js` (interfaccia e flusso), `js/geo.js` (funzioni pure: distanze, query, istruzioni), `js/i18n.js` (traduzioni IT/EN/FR), `privacy.html`.
 - `vendor/leaflet/` — Leaflet 1.9.4 (licenza BSD-2, nell'intestazione del file), niente CDN.
 - `manifest.webmanifest`, `sw.js`, `img/` — installazione come app e icone (originali).
-- `test/geo.test.js` — prove delle funzioni pure: `node test/geo.test.js`.
+- `test/` — prove senza dipendenze: `node test/geo.test.js && node test/i18n.test.js`.
+- `art/` — illustrazione del toret (`toret.svg`) e script che genera icone e grafica dello store (`python3 art/build.py`, richiede Playwright).
+- `store/`, `docs/` — materiali e guida per Google Play ([docs/ANDROID.md](docs/ANDROID.md)). Non servono sul sito: su Tophost si caricano solo `index.html`, `privacy.html`, `manifest.webmanifest`, `sw.js`, `css/`, `js/`, `img/`, `vendor/`.
 
 ## Servizi esterni e limiti
 | Servizio | A cosa serve | Note |
 | --- | --- | --- |
 | OpenStreetMap (tile.openstreetmap.org) | mappa | Uso leggero consentito con attribuzione ([policy](https://operations.osmfoundation.org/policies/tiles/)). Con molti utenti serve un fornitore di tile dedicato. |
-| Overpass (overpass-api.de, poi overpass.kumi.systems) | posizione dei turet | Gratuito, uso corretto. L'app invia un punto arrotondato a ~100 m. |
+| Overpass (overpass-api.de, overpass.private.coffee, overpass.kumi.systems, overpass.openstreetmap.fr) | posizione dei turet | Gratuito, uso corretto. L'app li interroga in parallelo (con un secondo tentativo su 502/429) e usa il primo che risponde; invia un punto arrotondato a ~100 m. |
 | routing.openstreetmap.de (profilo a piedi) | percorso | Gratuito, senza garanzie di servizio. In caso di errore l'app ripiega sulla linea d'aria. |
 
 **Dati:** i punti d'acqua potabile di OpenStreetMap (`amenity=drinking_water`, più le `amenity=fountain` con `drinking_water=yes`). A Torino sono quasi tutti toret, ma non tutti hanno il tag `fountain=toret`, quindi cercare solo quello ne faceva perdere molti. Il Comune non pubblica un elenco dei toret tra gli open data (aperTO). L'app è completa quanto lo è la mappatura: se manca un punto, si aggiunge su openstreetmap.org e compare in app senza altre modifiche.

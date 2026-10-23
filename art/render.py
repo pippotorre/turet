@@ -1,6 +1,7 @@
-import asyncio, sys
+import asyncio, sys, os
 from playwright.async_api import async_playwright
-svg=open('/home/claude/turet/art/toret.svg').read()
+ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+svg=open(ROOT+'/art/toret.svg').read()
 async def shot(b, html, w, h, out, transparent=True):
     pg=await b.new_page(viewport={'width':w,'height':h}); await pg.set_content(html); await pg.screenshot(path=out, omit_background=transparent); await pg.close()
 async def main():
