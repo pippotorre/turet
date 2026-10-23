@@ -7,7 +7,7 @@
   const t = (k, p) => I18n.t(k, p);
   const fmtDist = (m) => Geo.formatDistance(m, I18n.decimal());
   const TORINO = { lat: 45.0703, lon: 7.6869 };
-  const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+  const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.openstreetmap.fr/api/interpreter'];
   const ROUTING = 'https://routing.openstreetmap.de/routed-foot/route/v1/foot/';
   const RADII = [1000, 2000, 3500, 5000];             // parte da 1 km, l'utente può estendere fino a 5 km
   const CACHE_KEY = 'turet.cache.v1', LANG_KEY = 'turet.lang', CACHE_MAX_AGE = 7 * 24 * 3600 * 1000;
@@ -159,22 +159,37 @@
     try { return await fetch(url, { ...options, signal: ctl.signal }); } finally { clearTimeout(timer); }
   }
 
+  async function queryOne(url, body) {
+    const host = new URL(url).hostname;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const r = await timedFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }, 14000);
+        if (!r.ok) { const e = new Error('http'); e.http = r.status; throw e; }
+        return Geo.parseOverpass(await r.json());
+      } catch (err) {
+        const bad = { host, http: err.http, timeout: err.name === 'AbortError', detail: err.http ? String(err.http) : err.name === 'AbortError' ? 'timeout' : 'rete' };
+        if (attempt === 1 || !(err.http >= 500 || err.http === 429)) throw bad;
+        await new Promise((res) => setTimeout(res, 1200));      // 502/504/429: il server è occupato, un secondo tentativo spesso basta
+      }
+    }
+  }
+
   async function fetchTurets(origin, radius) {
     const key = Geo.roundCoord(origin.lat) + ',' + Geo.roundCoord(origin.lon) + ',' + radius;
     const body = 'data=' + encodeURIComponent(Geo.overpassQuery(origin.lat, origin.lon, radius));
-    let lastError = null;
-    for (const url of OVERPASS) {
-      try {
-        const r = await timedFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }, 22000);
-        if (!r.ok) { const e = new Error('Overpass ' + r.status); e.http = r.status; throw e; }
-        const data = Geo.parseOverpass(await r.json());
-        writeCache(key, data);
-        return { data, cached: false };
-      } catch (e) { if (e.name === 'AbortError') e.timeout = true; if (!lastError || e.http) lastError = e; }
+    try {                                                           // tutti i server insieme: vince il primo che risponde
+      const data = await Promise.any(OVERPASS.map((u) => queryOne(u, body)));
+      writeCache(key, data);
+      return { data, cached: false };
+    } catch (agg) {
+      const hit = readCache()[key];
+      if (hit && Date.now() - hit.ts < CACHE_MAX_AGE) return { data: hit.data, cached: true };
+      const errs = (agg && agg.errors) || [];
+      const e = new Error('unreachable');
+      e.http = (errs.find((x) => x.http) || {}).http; e.timeout = errs.length && errs.every((x) => x.timeout);
+      e.detail = errs.map((x) => x.host.replace(/^overpass[.-]?/, '').replace(/\.[a-z]+$/, '') + ' ' + x.detail).join(', ');
+      throw e;
     }
-    const hit = readCache()[key];
-    if (hit && Date.now() - hit.ts < CACHE_MAX_AGE) return { data: hit.data, cached: true };
-    throw lastError || new Error('unreachable');
   }
 
   async function fetchRoute(from, to, signal) {
@@ -241,6 +256,7 @@
     } catch (e) {
       const whyKey = !navigator.onLine ? 'why.offline' : e && e.http ? 'why.http' : e && e.timeout ? 'why.timeout' : 'why.unreachable';
       setStatus('status.loadFail', { whyKey, whyParams: { code: e && e.http } }, true);
+      if (e && e.detail) console.warn('Overpass:', e.detail);
     } finally { busy(false); }
   }
 
