@@ -1,7 +1,7 @@
 # Scheda Google Play — Turet
 
 Categoria: **Mappe e navigazione** (alternativa: Viaggi e info locali) · Gratuita · Senza annunci
-Email di contatto pubblica: INDIRIZZO-EMAIL · Sito: https://www.entratadisicurezza.com/turet/
+Email di contatto pubblica: info@entratadisicurezza.com · Sito: https://www.entratadisicurezza.com/turet/
 Informativa privacy (URL): https://www.entratadisicurezza.com/turet/privacy.html
 Grafica: icona `play-icon-512.png` (512×512), immagine in evidenza `feature-graphic-1024x500.png`.
 Screenshot: servono almeno 2 immagini verticali del telefono (vedi docs/ANDROID.md, passo 7).

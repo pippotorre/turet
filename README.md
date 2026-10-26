@@ -19,7 +19,7 @@ Per aggiornare dopo una modifica a CSS/JS cambia il numero `?v=` in `index.html`
 - `manifest.webmanifest`, `sw.js`, `img/` — installazione come app e icone (originali).
 - `test/` — prove senza dipendenze: `node test/geo.test.js && node test/i18n.test.js`.
 - `art/` — illustrazione del toret (`toret.svg`) e script che genera icone e grafica dello store (`python3 art/build.py`, richiede Playwright).
-- `store/`, `docs/` — materiali e guida per Google Play ([docs/ANDROID.md](docs/ANDROID.md)). Non servono sul sito: su Tophost si caricano solo `index.html`, `privacy.html`, `manifest.webmanifest`, `sw.js`, `css/`, `js/`, `img/`, `vendor/`.
+- `store/`, `docs/`, `tools/` — materiali, guida completa per Google Play ([docs/ANDROID.md](docs/ANDROID.md)) e controllo del sito (`bash tools/verifica-sito.sh URL`). Non servono sul sito: su Tophost si caricano solo `index.html`, `privacy.html`, `manifest.webmanifest`, `sw.js`, `css/`, `js/`, `img/`, `vendor/`.
 
 ## Servizi esterni e limiti
 | Servizio | A cosa serve | Note |

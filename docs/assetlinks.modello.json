@@ -1,10 +1,12 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.entratadisicurezza.turet",
-    "sha256_cert_fingerprints": [
-      "SOSTITUISCI:CON:L:IMPRONTA:SHA-256:DELLA:CHIAVE:DI:FIRMA"
-    ]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.entratadisicurezza.turet",
+      "sha256_cert_fingerprints": [
+        "SOSTITUISCI-CON-L-IMPRONTA-SHA-256-DELLA-FIRMA-DELL-APP"
+      ]
+    }
   }
-}]
+]

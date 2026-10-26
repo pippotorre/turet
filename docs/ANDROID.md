@@ -1,47 +1,121 @@
-# Turet su Google Play (Android)
+# Pubblicare Turet su Google Play — guida completa
 
-L'app Android è lo stesso sito, aperto a schermo intero in una «Trusted Web Activity»: ogni modifica al sito arriva anche all'app, senza nuove pubblicazioni. Costi: l'account sviluppatore che hai già.
+Tempo di lavoro: circa 1–2 ore, più l'attesa della revisione di Google (di solito pochi giorni, a volte di più). L'app Android è il sito aperto a schermo intero («Trusted Web Activity»): dopo la pubblicazione, ogni modifica al sito arriva anche all'app senza ripubblicare.
 
-Dati usati qui: sito `https://www.entratadisicurezza.com/turet/` · nome «Turet» · pacchetto `com.entratadisicurezza.turet` (non si cambia più dopo la pubblicazione).
+## Dati dell'app (da copiare così come sono)
+| Voce | Valore |
+| --- | --- |
+| Nome nello store (max 30 caratteri) | `Turet – fontanelle di Torino` |
+| Nome sotto l'icona | `Turet` |
+| Sito | `https://www.entratadisicurezza.com/turet/` |
+| Percorso di avvio (Start URL) | `/turet/` |
+| Identificativo del pacchetto | `com.entratadisicurezza.turet` (non si può più cambiare dopo la pubblicazione) |
+| Informativa privacy | `https://www.entratadisicurezza.com/turet/privacy.html` |
+| Email di contatto | `info@entratadisicurezza.com` |
+| Categoria | Mappe e navigazione |
+| Prezzo | Gratuita, senza annunci, senza acquisti |
 
-## 1. Pubblica il sito aggiornato
-Carica su Tophost, nella cartella `turet/`, tutto il contenuto del progetto (comprese le cartelle `img/`, `css/`, `js/`, `vendor/`, il file `privacy.html`). Controlla nel browser che si aprano `…/turet/` e `…/turet/privacy.html`.
+## Cosa è già pronto nel repository
+- Il sito completo (`index.html`, `manifest.webmanifest`, `sw.js`, `css/`, `js/`, `img/`, `vendor/`, `privacy.html`), con icone e schermata iniziale.
+- `store/play-icon-512.png` (icona 512×512) e `store/feature-graphic-1024x500.png` (immagine in evidenza).
+- `store/scheda-play-store.md`: tutti i testi della scheda in italiano, inglese e francese, e le risposte per la Play Console.
+- `tools/verifica-sito.sh`: controlla dal Mac che il sito sia online e a posto.
+- `docs/assetlinks.modello.json`: modello del file che collega sito e app.
 
-## 2. Completa la privacy
-In `privacy.html`, `store/scheda-play-store.md` sostituisci `INDIRIZZO-EMAIL` con l'indirizzo che vuoi rendere pubblico.
+**Cosa non posso preparare io:** il file `.aab` (il pacchetto Android) si genera con PWABuilder dal sito già online; gli screenshot vanno fatti dal tuo telefono; l'account e la Play Console sono tuoi.
 
-## 3. Crea il pacchetto con PWABuilder
-1. Vai su https://www.pwabuilder.com e inserisci `https://www.entratadisicurezza.com/turet/`.
-2. Quando l'analisi finisce, scegli «Package for stores» → «Android».
-3. Imposta: Package ID `com.entratadisicurezza.turet`, nome «Turet», nome breve «Turet», Start URL `/turet/`, versione 1 (codice 1). Per la firma scegli «Create new» (se ti chiede di usare la firma di Google Play, accetta).
-4. Scarica lo ZIP: contiene il file `.aab` da caricare, il file `signing.keystore` con la sua password e un `assetlinks.json`. **Conserva keystore e password in un posto sicuro**: senza non puoi aggiornare l'app.
-(L'aspetto di PWABuilder può cambiare un poco: segui le sue voci equivalenti.)
+## Passo 1 — Metti online il sito e controllalo
+1. Carica su Tophost, nella cartella `turet/`, i file elencati sopra (non servono `art/`, `store/`, `docs/`, `test/`, `tools/`).
+2. Controllo veloce, da Terminale sul Mac:
+   ```
+   bash tools/verifica-sito.sh https://www.entratadisicurezza.com/turet/
+   ```
+   Ogni riga deve essere «OK». Se non vuoi usare il Terminale, apri nel browser `…/turet/`, `…/turet/privacy.html` e `…/turet/manifest.webmanifest`: devono aprirsi senza errori.
+3. Apri il sito dal telefono, premi il pulsante di ricerca e controlla che chieda la posizione e trovi una fontanella.
 
-## 4. Collega app e sito (assetlinks)
-Serve perché l'app si apra senza la barra del browser.
-1. Il file va a questo indirizzo esatto, nella **radice** del dominio (non dentro `/turet/`): `https://www.entratadisicurezza.com/.well-known/assetlinks.json`
-2. Usa il modello in `docs/assetlinks.modello.json` oppure quello dello ZIP, ma l'impronta SHA-256 deve essere quella giusta:
-   - dopo aver caricato l'app in Play Console, apri *Test e rilascio → Integrità dell'app → Firma dell'app* e copia «Impronta certificato SHA-256» della **chiave di firma dell'app**; incollala nel file. Se vuoi, aggiungi anche quella del keystore di PWABuilder, separata da virgola.
-3. Carica il file su Tophost nella cartella `.well-known/` della radice del sito. Se Tophost nasconde le cartelle che iniziano con il punto, creala dal pannello.
-4. Controllo: l'indirizzo deve mostrare il testo del file nel browser (sul Mac: apri l'indirizzo e verifica).
+## Passo 2 — Controlla il tuo account Google Play
+1. Entra su https://play.google.com/console con l'account che hai già.
+2. Controlla che non ci siano avvisi rossi o richieste in sospeso (verifica dell'identità, dati di contatto, profilo dei pagamenti). Sono cambiate le regole dal tuo primo account: se Google chiede un documento o un telefono Android per la verifica, completa quel passaggio prima di andare avanti.
+3. Per un account **creato dopo il 13 novembre 2023** è richiesto un test chiuso con almeno 12 persone per 14 giorni prima della produzione. Se il tuo account è più vecchio la regola di norma non vale; la Console te lo dice nella pagina dell'app («Dashboard»), quindi non serve decidere ora.
 
-## 5. Play Console
-1. *Crea app*: nome «Turet», italiano, app, gratuita.
-2. Compila le sezioni richieste con `store/scheda-play-store.md` (testi, risposte su privacy, annunci, valutazione contenuti, sicurezza dei dati).
-3. *Scheda dello store → Grafica*: icona `store/play-icon-512.png`, immagine in evidenza `store/feature-graphic-1024x500.png`.
-4. *Test → Test interno*: carica il file `.aab` e invita i tuoi tester per email: parte subito e si scarica da un link, utile per provare l'app vera prima di tutto il resto.
-5. Se l'account è anche per te soggetto alla regola dei test chiusi (12 tester per 14 giorni), la Console te lo indica: usa *Test chiuso* con la stessa build e poi chiedi l'accesso alla produzione.
-6. *Produzione*: crea il rilascio con lo stesso `.aab` e invia in revisione (di solito pochi giorni).
+## Passo 3 — Crea il pacchetto con PWABuilder
+1. Vai su https://www.pwabuilder.com e inserisci `https://www.entratadisicurezza.com/turet/`, poi «Start».
+2. Quando l'analisi finisce, scegli «Package for stores» → «Android» → «Generate package».
+3. Compila le opzioni così:
+   - Package ID: `com.entratadisicurezza.turet`
+   - App name: `Turet` · Launcher name: `Turet`
+   - App version: `1.0.0` · Version code: `1`
+   - Start URL: `/turet/`
+   - Display mode: Standalone · Orientation: Portrait
+   - **Location delegation: attiva.** È indispensabile: senza, la posizione non funziona nell'app. Se non trovi la voce, fermati e scrivimelo.
+   - Notification delegation: disattivata · Google Play Billing: disattivato
+   - Signing key: «Create new» (PWABuilder crea la chiave per te)
+4. Scarica lo ZIP. Dentro ci sono il file `.aab`, il file della chiave (`signing.keystore`) con la sua password (`signing-key-info.txt`) e un `assetlinks.json`.
+5. **Metti al sicuro keystore e password** (due copie, per esempio un gestore di password e un disco). Senza non puoi più aggiornare l'app Android.
+(L'aspetto di PWABuilder può cambiare: segui le voci equivalenti.)
 
-## 6. Prima di pubblicare
-- Sul telefono del test interno apri l'app: se in alto compare una barra con l'indirizzo, l'assetlinks non coincide (impronta sbagliata o file nel posto sbagliato).
-- Verifica che la posizione venga richiesta e che la ricerca funzioni.
+## Passo 4 — Crea l'app nella Play Console
+1. «Crea app» → nome `Turet – fontanelle di Torino`, lingua predefinita italiano, tipo «App», «Gratuita».
+2. Spunta le dichiarazioni (norme per gli sviluppatori e leggi sull'esportazione degli Stati Uniti) e conferma.
 
-## 7. Screenshot
-Servono almeno 2 immagini verticali. Fai gli screenshot dal telefono con l'app aperta (ricerca riuscita, percorso con indicazioni) e caricali nella scheda dello store. Qui non posso farli: la mappa reale non è raggiungibile.
+## Passo 5 — Contenuti dell'app (sezione «Norme» o «Contenuti dell'app»)
+Compila in questo ordine:
+| Sezione | Cosa rispondere |
+| --- | --- |
+| Norme sulla privacy | URL: `https://www.entratadisicurezza.com/turet/privacy.html` |
+| Accesso all'app | Tutte le funzioni sono accessibili senza login o credenziali |
+| Annunci | No, l'app non contiene annunci |
+| Valutazione dei contenuti | Categoria «Utility/Produttività/Altro»; nessuna violenza, nessun contenuto sessuale, nessuna parolaccia, nessun gioco d'azzardo, nessuna interazione tra utenti, non condivide la posizione con altri utenti. Esito atteso: tutte le età (PEGI 3) |
+| Pubblico di destinazione | Fasce 13 anni e oltre (non selezionare fasce sotto i 13: attiverebbero regole aggiuntive per i bambini). L'app non è pensata per i bambini |
+| App di notizie / Covid-19 / Governativa / Finanziaria / Salute | No a tutte |
+| Sicurezza dei dati | Raccoglie: **Posizione → Posizione precisa**. Condivisa con terzi: **sì** (i servizi di OpenStreetMap, necessari alla funzione principale). Elaborazione effimera: **sì** (non viene salvata). Obbligatoria: sì. Scopo: funzionalità dell'app. Dati crittografati in transito: sì (HTTPS). Nessun altro dato, nessun account. Possibilità di richiedere l'eliminazione: non applicabile, i dati non sono conservati |
 
-## Aggiornamenti
-Per cambiare l'app basta ricaricare i file del sito. Solo per cambiare nome, icona o pacchetto si rifà il pacchetto (con la stessa chiave e un codice versione più alto).
+## Passo 6 — Scheda dello store
+1. «Presenza nello store» → «Scheda principale dello store».
+2. Testi: copia da `store/scheda-play-store.md` titolo, descrizione breve e completa in italiano; poi «Gestisci traduzioni» e aggiungi inglese e francese con i testi del file.
+3. Grafica: icona `store/play-icon-512.png`, immagine in evidenza `store/feature-graphic-1024x500.png`.
+4. **Screenshot del telefono (almeno 2, meglio 4):** apri l'app (o il sito) sul tuo telefono, fai una ricerca riuscita e premi insieme tasto accensione e volume giù. Ne servono con la mappa e il percorso, e con la lista dei risultati. Caricali da «Screenshot del telefono».
+5. Categoria «Mappe e navigazione», email `info@entratadisicurezza.com`, sito web `https://www.entratadisicurezza.com/turet/`.
 
-## iPhone
-Resta il sito: Condividi → «Aggiungi a Home».
+## Passo 7 — Primo caricamento (test interno) e collegamento sito-app
+1. «Test e rilascio» → «Test interno» → «Crea nuova release». Se chiede di usare la «firma delle app di Google Play», accetta.
+2. Carica il file `.aab`, nome release `1.0.0`, «Salva» e «Avvia il rilascio».
+3. Nella scheda «Tester» crea una lista con la tua email e salva: ti dà un link per installare l'app dal Play Store.
+4. **Collega app e sito.** Apri «Test e rilascio» → «Integrità dell'app» → «Firma dell'app» e copia l'**impronta del certificato SHA-256** della chiave di firma dell'app.
+   Sul dominio deve esistere `https://www.entratadisicurezza.com/.well-known/assetlinks.json` (nella radice del dominio, non in `/turet/`). Il file è **uno solo per tutto il dominio** e contiene un blocco per ogni app: se c'è già quello di Nasone (`com.entratadisicurezza.nasone`) **non sostituirlo**, aggiungi il blocco di Turet dopo una virgola. Esempio con due app:
+   ```
+   [
+     { "relation": ["delegate_permission/common.handle_all_urls"],
+       "target": { "namespace": "android_app", "package_name": "com.entratadisicurezza.nasone",
+                   "sha256_cert_fingerprints": ["IMPRONTA-DI-NASONE"] } },
+     { "relation": ["delegate_permission/common.handle_all_urls"],
+       "target": { "namespace": "android_app", "package_name": "com.entratadisicurezza.turet",
+                   "sha256_cert_fingerprints": ["IMPRONTA-DI-TURET"] } }
+   ]
+   ```
+   Le impronte sono righe come `AB:CD:12:…` (32 coppie). Nel file metti solo impronte vere: non lasciare i segnaposto. Se Tophost non mostra le cartelle che iniziano con il punto, creala dal pannello (nome `.well-known`).
+5. Controllo: l'indirizzo `https://www.entratadisicurezza.com/.well-known/assetlinks.json` deve mostrare il testo nel browser. Poi prova il verificatore di Google: `https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://www.entratadisicurezza.com&relation=delegate_permission/common.handle_all_urls` deve elencare il tuo pacchetto.
+6. Installa l'app dal link di test interno e aprila. Controlli:
+   - **non** deve comparire la barra con l'indirizzo in alto (se compare, il collegamento sito-app non è a posto: di solito impronta sbagliata o file nel posto sbagliato; a volte serve aspettare qualche minuto o reinstallare);
+   - il telefono deve chiedere il permesso per la posizione e la ricerca deve funzionare;
+   - il pulsante «Apri in Google Maps» deve aprire Maps.
+
+## Passo 8 — Produzione
+1. «Test e rilascio» → «Produzione» → «Crea nuova release» e scegli «Promuovi» dalla release di test (o ricarica lo stesso `.aab`).
+2. Note di rilascio (in italiano e in inglese): «Prima versione.» / «First release.»
+3. Paesi: scegli dove distribuirla (per esempio tutti, oppure solo l'Italia).
+4. «Invia per la revisione». Controlla la casella dell'email dell'account: Google scrive lì l'esito. Se è respinta, il messaggio dice il motivo: incollamelo e lo sistemiamo.
+5. Se la Console ti chiede il test chiuso con 12 tester per 14 giorni (vedi passo 2), usa «Test chiuso» con la stessa release, invita i tester per email, aspetta i 14 giorni e poi fai domanda di accesso alla produzione dalla Dashboard.
+
+## Dopo la pubblicazione
+- **Aggiornare il sito:** basta ricaricare i file su Tophost (e aumentare il numero `?v=` come spiegato nel README). L'app si aggiorna da sola.
+- **Aggiornare il pacchetto:** serve solo per cambiare nome, icona o impostazioni di PWABuilder. Si rigenera con la stessa chiave (importando il keystore) e un «Version code» più alto.
+- **Non perdere** il keystore e la password.
+
+## Se qualcosa non va
+| Problema | Cosa controllare |
+| --- | --- |
+| Compare la barra dell'indirizzo | L'impronta in `assetlinks.json` deve essere quella della «Firma dell'app» della Play Console (non quella di PWABuilder, se hai accettato la firma di Google); il file deve stare nella radice del dominio e rispondere con JSON |
+| La posizione non viene chiesta | In PWABuilder la «Location delegation» era disattivata: rigenera il pacchetto con l'opzione attiva e carica una nuova versione con «Version code» 2 |
+| Schermata bianca all'avvio | Il sito deve aprirsi da browser; controlla `bash tools/verifica-sito.sh` |
+| Rifiutata per privacy o posizione | L'informativa deve aprirsi senza errori e dichiarare l'uso della posizione; controlla le risposte su «Sicurezza dei dati» (passo 5) |
