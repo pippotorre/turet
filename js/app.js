@@ -13,7 +13,7 @@
   const CACHE_KEY = 'turet.cache.v1', LANG_KEY = 'turet.lang', CACHE_MAX_AGE = 7 * 24 * 3600 * 1000;
   const isApple = /iphone|ipad|ipod/i.test(navigator.userAgent) || (/macintosh/i.test(navigator.userAgent) && 'ontouchend' in document);
 
-  const PINS = 10;
+  const PINS = 40;
   const state = { origin: null, turets: [], selected: null, route: null, manual: false, serial: 0, routeAbort: null,
     status: null, manualKey: 'manual.tap', cached: false, busy: false, radius: 0 };
   const layers = { me: null, accuracy: null, route: null, pins: new Map() };
@@ -45,6 +45,15 @@
 
   const pinSvg = '<svg viewBox="0 0 34 42" aria-hidden="true"><path class="body" d="M17 1C8.7 1 2 7.6 2 15.8 2 26.5 17 41 17 41s15-14.5 15-25.2C32 7.6 25.3 1 17 1z" stroke="#fff" stroke-width="2.5"/><path d="M17 9c-3.5 4.5-5.5 7.3-5.5 10a5.5 5.5 0 0 0 11 0c0-2.7-2-5.5-5.5-10z" fill="#fff"/></svg>';
   const pinIcon = (sel) => L.divIcon({ className: '', html: '<div class="pin' + (sel ? ' sel' : '') + '">' + pinSvg + '</div>', iconSize: [26, 32], iconAnchor: [13, 31] });
+
+  // segnalazione di una fontanella mancante: apre una nota di OpenStreetMap sul punto in cui sei (o al centro della mappa)
+  function updateReport() {
+    const c = state.origin ? { lat: state.origin.lat, lng: state.origin.lon } : map.getCenter();
+    $('report').href = 'https://www.openstreetmap.org/note/new#map=19/' + c.lat.toFixed(5) + '/' + c.lng.toFixed(5) + '&layers=N';
+  }
+  // con la mappa molto aperta i segnaposto si rimpiccioliscono per non coprirsi
+  function updateZoomClass() { map.getContainer().classList.toggle('zoom-far', map.getZoom() < 16); }
+  map.on('moveend', updateReport); map.on('zoomend', updateZoomClass); updateReport(); updateZoomClass();
 
   /* ---------- interfaccia ---------- */
   function setStatus(key, params, error) { state.status = key ? { key, params, error: !!error } : null; renderStatus(); }
@@ -245,6 +254,7 @@
 
   async function search() {
     const o = state.origin, mine = ++state.serial, radius = RADII[state.radius];
+    updateReport();
     renderOrigin(); fit([o], state.radius ? 15 : 16);   // il punto resta nella parte di mappa non coperta dal pannello
     //   // senza animazione: altrimenti la fine dell'animazione annulla il successivo fitBounds
     busy(true);

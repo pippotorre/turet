@@ -43,7 +43,7 @@
     const at = '(around:' + r + ',' + roundCoord(lat) + ',' + roundCoord(lon) + ')';
     // tutti i punti d'acqua potabile pubblici (a Torino sono in gran parte toret, ma molti non hanno il tag fountain=toret) + fontane marcate come potabili
     // tutti i punti d'acqua potabile (nodi, aree e relazioni): a Torino sono in gran parte toret, ma non tutti hanno il tag fountain=toret
-    return '[out:json][timeout:25];(nwr["amenity"="drinking_water"]' + at + ';nwr["fountain"="toret"]' + at + ';nwr["amenity"="fountain"]["drinking_water"="yes"]' + at + ';);out center body;';
+    return '[out:json][timeout:25];(nwr["amenity"="drinking_water"]' + at + ';nwr["fountain"="toret"]' + at + ';nwr["amenity"="fountain"]["drinking_water"="yes"]' + at + ';nwr["man_made"="water_tap"]["drinking_water"="yes"]' + at + ';);out center body;';
   }
 
   /** Estrae dalla risposta di Overpass solo nodi con coordinate valide. */
