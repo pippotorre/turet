@@ -1,0 +1,51 @@
+# Turet — note di sviluppo
+
+Diario del progetto: decisioni prese, verifiche, domande aperte. Si aggiorna a ogni passo.
+
+## Obiettivo
+
+Web app installabile (PWA, anche su Google Play come app impacchettata) che trova il **toret** più vicino,
+la fontanella torinese in ghisa a testa di toro, e disegna il percorso a piedi.
+Indirizzo: **https://www.entratadisicurezza.com/turet/** (Tophost).
+
+## Decisioni prese
+
+| Data | Decisione |
+|---|---|
+| 23/10/2026 | Sito statico (HTML/CSS/JS senza build), nessun server, nessun database, nessuna chiave. |
+| 23/10/2026 | Dati da OpenStreetMap: punti d'acqua potabile via Overpass (più server in parallelo, secondo tentativo su 502/429), percorso a piedi da routing.openstreetmap.de, mappa Leaflet 1.9.4 in `vendor/`. |
+| 23/10/2026 | Interfaccia in italiano, inglese e francese. Ultimi risultati salvati sul dispositivo per 7 giorni (uso con poca rete). |
+| 23/10/2026 | Illustrazione, icone, splash e informativa privacy originali (`art/`, `privacy.html`). |
+| 26/10/2026 | Pubblicazione su Google Play come PWA impacchettata (PWABuilder): guida in `docs/ANDROID.md`, controllo del sito con `tools/verifica-sito.sh`. |
+| 26/10/2026 | Fino a 40 punti sulla mappa, inclusi i rubinetti potabili; link per segnalare su OpenStreetMap le fontanelle mancanti. |
+| 27/10/2026 | **Statistiche di visita con GoatCounter** (senza cookie, nessun dato personale): vedi sotto. |
+
+## Statistiche (GoatCounter)
+
+- Account unico per tutto il dominio: https://entratadisicurezza.goatcounter.com (gratuito per siti non commerciali).
+  Le app si distinguono dal percorso della pagina (`/turet/`).
+- Script in `index.html`, prima di `</head>`. Il percorso inviato è `location.pathname` senza `index.html`,
+  così `/turet/` e `/turet/index.html` contano come la stessa pagina. `privacy.html` non è contata.
+- Eventi sul pulsante «Installa l'app» (`js/app.js`, funzione `conta`):
+  - `turet-installa-clic`: qualcuno ha toccato il pulsante;
+  - `turet-installa-rifiutata`: ha chiuso la finestra di Chrome senza installare;
+  - `turet-installata`: l'app è stata installata (anche dal menu ⋮ di Chrome, senza il pulsante).
+  Su iPhone il pulsante è solo un'istruzione (non cliccabile), quindi lì non ci sono eventi.
+- Nessun cookie e niente salvato nel browser: non serve il banner. GoatCounter non conserva l'IP
+  (lo usa solo per ricavare il paese). Server in Germania e Finlandia.
+- Limiti: chi usa un blocco pubblicità (Brave, uBlock, ecc.) non viene contato; offline non si conta nulla.
+- Informativa privacy aggiornata in IT/EN/FR (sezione «Statistiche di visita») e indicazioni per la
+  «Sicurezza dei dati» di Google Play in `docs/ANDROID.md`.
+- Versione dei file portata a `?v=15` / `turet-v15` per far arrivare il nuovo `app.js` ai telefoni.
+
+## Verifiche fatte
+
+- 27/10/2026 – Prova in Chromium simulando Android, con lo script di GoatCounter vero (copia dal repository
+  ufficiale): una visita per `/turet/`, nessuna per `privacy.html`, eventi `installa-clic`, `installa-rifiutata`
+  e `installata` inviati correttamente. Nessun errore JavaScript. Test esistenti (`node --test test/`) superati.
+
+## Punti aperti
+
+- [ ] Caricare su Tophost `index.html`, `privacy.html`, `sw.js`, `js/app.js` aggiornati.
+- [ ] Aggiornare il modulo «Sicurezza dei dati» nella Play Console (Interazioni con l'app → Analisi).
+- [ ] Dopo qualche giorno, controllare su GoatCounter che arrivino visite ed eventi.
