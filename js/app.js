@@ -326,10 +326,15 @@
   for (const b of document.querySelectorAll('.lang button')) b.addEventListener('click', () => setLanguage(b.dataset.lang, true));
 
   /* ---------- installazione come app ---------- */
+  // Statistiche (GoatCounter): eventi anonimi sull'installazione. Se lo script non è caricato (offline, blocco pubblicità) non fa nulla.
+  const conta = (nome) => { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: 'turet-' + nome, title: 'turet: ' + nome, event: true }); } catch (e) {} };
   let installEvent = null;
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; $('install').hidden = false; });
-  window.addEventListener('appinstalled', () => { installEvent = null; $('install').hidden = true; });
-  $('install').addEventListener('click', async () => { const ev = installEvent; installEvent = null; $('install').hidden = true; try { await ev.prompt(); } catch (e) {} });
+  window.addEventListener('appinstalled', () => { installEvent = null; $('install').hidden = true; conta('installata'); });
+  $('install').addEventListener('click', async () => {
+    const ev = installEvent; installEvent = null; $('install').hidden = true; conta('installa-clic');
+    try { await ev.prompt(); const scelta = await ev.userChoice; if (scelta && scelta.outcome === 'dismissed') conta('installa-rifiutata'); } catch (e) {}
+  });
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
   if (isApple && !standalone()) { const b = $('install'); b.hidden = false; b.disabled = true; b.style.textDecoration = 'none'; }
 
