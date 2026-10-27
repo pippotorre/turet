@@ -17,7 +17,7 @@ Il turet è la fontanella torinese in ghisa con la testa di toro: l’acqua è p
 • Apri il percorso in Google Maps per farti guidare
 • Altri turet nei dintorni, da scegliere con un tocco
 • Se non vuoi usare la posizione, tocca la mappa per indicare dove sei
-• In italiano, inglese e francese
+• In italiano, inglese, francese, spagnolo e tedesco
 
 Nessun account, nessuna pubblicità. I dati dei turet vengono da OpenStreetMap, aggiornata dai volontari: se ne manca uno, puoi aggiungerlo anche tu.
 
@@ -32,7 +32,7 @@ The turet is Turin’s cast-iron bull-head fountain, with free drinking water. T
 • Open the route in Google Maps to be guided
 • Other turets nearby, one tap away
 • If you prefer not to share your location, tap the map to say where you are
-• In Italian, English and French
+• In Italian, English, French, Spanish and German
 
 No account, no ads. Turet locations come from OpenStreetMap, kept up to date by volunteers: if one is missing, you can add it too.
 
@@ -47,9 +47,39 @@ Le turet est la fontaine turinoise en fonte à tête de taureau : l’eau est po
 • Ouvrez l’itinéraire dans Google Maps pour être guidé
 • D’autres turets à proximité, à choisir d’un toucher
 • Si vous ne voulez pas partager votre position, touchez la carte pour indiquer où vous êtes
-• En italien, anglais et français
+• En italien, anglais, français, espagnol et allemand
 
 Pas de compte, pas de publicité. Les positions viennent d’OpenStreetMap, mise à jour par des bénévoles : s’il en manque un, vous pouvez l’ajouter.
+
+## Español
+**Título:** Turet – fuentes de Turín
+**Descripción breve:** Encuentra el turet, la fuente de Turín, más cercano y llega a pie.
+**Descripción completa:**
+El turet es la fuente de hierro fundido de Turín con cabeza de toro: el agua es potable y gratuita. Con Turet encuentras en segundos el más cercano.
+
+• Un toque y el mapa muestra el turet más cercano, con distancia y tiempo a pie
+• Ruta a pie trazada en el mapa, con indicaciones paso a paso
+• Abre la ruta en Google Maps para que te guíe
+• Otros turets cercanos, a un toque
+• Si prefieres no compartir tu ubicación, toca el mapa para indicar dónde estás
+• En italiano, inglés, francés, español y alemán
+
+Sin cuenta, sin publicidad. Las ubicaciones vienen de OpenStreetMap, mantenida por voluntarios: si falta una fuente, tú también puedes añadirla.
+
+## Deutsch
+**Titel:** Turet – Brunnen in Turin
+**Kurzbeschreibung:** Finde den nächsten Turet, Turins Trinkbrunnen, und geh zu Fuß hin.
+**Vollständige Beschreibung:**
+Der Turet ist Turins gusseiserner Trinkbrunnen mit Stierkopf: Das Wasser ist trinkbar und kostenlos. Turet findet den nächsten in Sekunden.
+
+• Ein Tipp zeigt den nächsten Turet auf der Karte, mit Entfernung und Gehzeit
+• Fußweg auf der Karte eingezeichnet, mit Schritt-für-Schritt-Hinweisen
+• Route in Google Maps öffnen und sich führen lassen
+• Weitere Turets in der Nähe, mit einem Tipp wählbar
+• Wenn du deinen Standort nicht teilen willst, tippe auf die Karte, um zu zeigen, wo du bist
+• Auf Italienisch, Englisch, Französisch, Spanisch und Deutsch
+
+Kein Konto, keine Werbung. Die Standorte stammen von OpenStreetMap, das Freiwillige pflegen: Fehlt ein Brunnen, kannst du ihn auch selbst eintragen.
 
 ## Risposte alla Play Console
 - **Sicurezza dei dati — posizione:** l’app usa la posizione (precisa) e la invia, arrotondata o come coordinate del percorso, a servizi di terze parti (OpenStreetMap) per la funzione principale; non è salvata dallo sviluppatore. Dichiara: raccolta sì, condivisa sì (necessaria al funzionamento), elaborazione effimera, nessun obbligo di eliminazione perché non conservata. Nessun altro dato, nessun account, nessun acquisto.
