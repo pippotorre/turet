@@ -19,6 +19,7 @@ Indirizzo: **https://www.entratadisicurezza.com/turet/** (Tophost).
 | 26/10/2026 | Pubblicazione su Google Play come PWA impacchettata (PWABuilder): guida in `docs/ANDROID.md`, controllo del sito con `tools/verifica-sito.sh`. |
 | 26/10/2026 | Fino a 40 punti sulla mappa, inclusi i rubinetti potabili; link per segnalare su OpenStreetMap le fontanelle mancanti. |
 | 27/10/2026 | **Statistiche di visita con GoatCounter** (senza cookie, nessun dato personale): vedi sotto. |
+| 27/10/2026 | **Spagnolo e tedesco**, come Nasone: interfaccia (`js/i18n.js`), pulsanti ES/DE, informativa privacy e testi per la scheda Google Play. Le frasi uguali a Nasone riprendono le sue traduzioni; quelle con turet, Torino e testa di toro sono tradotte apposta. Su schermi stretti i pulsanti delle lingue vanno su una riga a tutta larghezza (stessa regola CSS di Nasone). Versione dei file `?v=16` / `turet-v16`. |
 
 ## Statistiche (GoatCounter)
 
@@ -42,9 +43,15 @@ Indirizzo: **https://www.entratadisicurezza.com/turet/** (Tophost).
 
 - 27/10/2026 – Prova in Chromium simulando Android, con lo script di GoatCounter vero (copia dal repository
   ufficiale): una visita per `/turet/`, nessuna per `privacy.html`, eventi `installa-clic`, `installa-rifiutata`
-  e `installata` inviati correttamente. Nessun errore JavaScript. Test esistenti (`node --test test/`) superati.
+  e `installata` inviati correttamente. Nessun errore JavaScript. Prove esistenti superate (`node test/geo.test.js && node test/i18n.test.js`).
+
+- 27/10/2026 – Spagnolo e tedesco: prove `i18n` estese alle nuove lingue (stesse chiavi e segnaposto, scelta automatica
+  della lingua del telefono) e superate; app e informativa provate in Chromium a 360 px in ES e DE, nessun errore JavaScript,
+  niente scorrimento orizzontale, nessun residuo dei testi di Nasone.
 
 ## Punti aperti
+
+- [ ] Play Console: «Gestisci traduzioni» → aggiungere spagnolo e tedesco con i testi di `store/scheda-play-store.md`.
 
 - [ ] Caricare su Tophost `index.html`, `privacy.html`, `sw.js`, `js/app.js` aggiornati.
 - [ ] Aggiornare il modulo «Sicurezza dei dati» nella Play Console (Interazioni con l'app → Analisi).

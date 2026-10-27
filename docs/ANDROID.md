@@ -18,7 +18,7 @@ Tempo di lavoro: circa 1–2 ore, più l'attesa della revisione di Google (di so
 ## Cosa è già pronto nel repository
 - Il sito completo (`index.html`, `manifest.webmanifest`, `sw.js`, `css/`, `js/`, `img/`, `vendor/`, `privacy.html`), con icone e schermata iniziale.
 - `store/play-icon-512.png` (icona 512×512) e `store/feature-graphic-1024x500.png` (immagine in evidenza).
-- `store/scheda-play-store.md`: tutti i testi della scheda in italiano, inglese e francese, e le risposte per la Play Console.
+- `store/scheda-play-store.md`: tutti i testi della scheda in italiano, inglese, francese, spagnolo e tedesco, e le risposte per la Play Console.
 - `tools/verifica-sito.sh`: controlla dal Mac che il sito sia online e a posto.
 - `docs/assetlinks.modello.json`: modello del file che collega sito e app.
 
@@ -72,7 +72,7 @@ Compila in questo ordine:
 
 ## Passo 6 — Scheda dello store
 1. «Presenza nello store» → «Scheda principale dello store».
-2. Testi: copia da `store/scheda-play-store.md` titolo, descrizione breve e completa in italiano; poi «Gestisci traduzioni» e aggiungi inglese e francese con i testi del file.
+2. Testi: copia da `store/scheda-play-store.md` titolo, descrizione breve e completa in italiano; poi «Gestisci traduzioni» e aggiungi inglese, francese, spagnolo e tedesco con i testi del file.
 3. Grafica: icona `store/play-icon-512.png`, immagine in evidenza `store/feature-graphic-1024x500.png`.
 4. **Screenshot del telefono (almeno 2, meglio 4):** apri l'app (o il sito) sul tuo telefono, fai una ricerca riuscita e premi insieme tasto accensione e volume giù. Ne servono con la mappa e il percorso, e con la lista dei risultati. Caricali da «Screenshot del telefono».
 5. Categoria «Mappe e navigazione», email `info@entratadisicurezza.com`, sito web `https://www.entratadisicurezza.com/turet/`.

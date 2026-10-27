@@ -14,7 +14,7 @@ Sito statico: basta copiare i file in una cartella raggiungibile in **HTTPS** (l
 Per aggiornare dopo una modifica a CSS/JS cambia il numero `?v=` in `index.html` e in `sw.js`, e `VERSION` in `sw.js`, altrimenti i telefoni continuano a usare la copia vecchia.
 
 ## Struttura
-- `index.html`, `css/app.css`, `js/app.js` (interfaccia e flusso), `js/geo.js` (funzioni pure: distanze, query, istruzioni), `js/i18n.js` (traduzioni IT/EN/FR), `privacy.html`.
+- `index.html`, `css/app.css`, `js/app.js` (interfaccia e flusso), `js/geo.js` (funzioni pure: distanze, query, istruzioni), `js/i18n.js` (traduzioni IT/EN/FR/ES/DE), `privacy.html`.
 - `vendor/leaflet/` — Leaflet 1.9.4 (licenza BSD-2, nell'intestazione del file), niente CDN.
 - `manifest.webmanifest`, `sw.js`, `img/` — installazione come app e icone (originali).
 - `test/` — prove senza dipendenze: `node test/geo.test.js && node test/i18n.test.js`.
@@ -38,6 +38,6 @@ Navigazione in tempo reale mentre cammini, filtro «aperto/funzionante» se i da
 
 ## Lingue
 
-L'interfaccia parla italiano, inglese e francese. La lingua si sceglie dai pulsanti IT/EN/FR in alto e viene ricordata; alla prima visita si usa quella del telefono (se non è supportata: inglese).
+L'interfaccia parla italiano, inglese, francese, spagnolo e tedesco. La lingua si sceglie dai pulsanti IT/EN/FR/ES/DE in alto e viene ricordata; alla prima visita si usa quella del telefono (se non è supportata: inglese).
 
 Per aggiungerne una: copia un blocco in `DICT` di `js/i18n.js`, traduci i testi (tieni invariati i `{segnaposto}`), aggiungi il codice a `LANGS` e un pulsante `data-lang` in `index.html`; `node test/i18n.test.js` controlla che non manchi nessuna voce. Se cambi file, aumenta `VERSION` in `sw.js`.

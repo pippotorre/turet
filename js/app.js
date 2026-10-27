@@ -1,6 +1,6 @@
 /* Turet — trova la fontanella torinese «toret» più vicina e il percorso a piedi per raggiungerla.
  * Dati: OpenStreetMap (Overpass). Percorsi: routing.openstreetmap.de (profilo a piedi). Mappa: Leaflet.
- * Lingue: italiano, inglese, francese (js/i18n.js). */
+ * Lingue: italiano, inglese, francese, spagnolo, tedesco (js/i18n.js). */
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);

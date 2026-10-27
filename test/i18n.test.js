@@ -8,14 +8,14 @@ t('tutte le lingue hanno le stesse chiavi', () => {
   for (const l of Object.keys(I.DICT)) assert.deepStrictEqual(keys(l), keys('it'), 'chiavi diverse in ' + l);
 });
 t('stessi segnaposto in ogni traduzione', () => {
-  for (const l of ['en', 'fr']) for (const k of keys('it')) assert.strictEqual(ph(I.DICT[l][k]), ph(I.DICT.it[k]), l + ' · ' + k);
+  for (const l of ['en', 'fr', 'es', 'de']) for (const k of keys('it')) assert.strictEqual(ph(I.DICT[l][k]), ph(I.DICT.it[k]), l + ' · ' + k);
 });
 t('nessuna traduzione vuota o identica per sbaglio a una chiave', () => {
   for (const l of Object.keys(I.DICT)) for (const [k, v] of Object.entries(I.DICT[l])) assert(typeof v === 'string' && v.trim() !== '' || k.startsWith('step.arrive.') || k === 'on' || k === 'onto', l + ' · ' + k);
 });
 t('detect sceglie la prima lingua supportata, altrimenti inglese', () => {
-  assert.strictEqual(I.detect(['fr-CA', 'en']), 'fr'); assert.strictEqual(I.detect(['de-DE', 'it-IT']), 'it');
-  assert.strictEqual(I.detect(['de', 'es']), 'en'); assert.strictEqual(I.detect([]), 'en'); assert.strictEqual(I.detect(undefined), 'en');
+  assert.strictEqual(I.detect(['fr-CA', 'en']), 'fr'); assert.strictEqual(I.detect(['de-DE', 'it-IT']), 'de'); assert.strictEqual(I.detect(['es-ES']), 'es');
+  assert.strictEqual(I.detect(['pt', 'ja']), 'en'); assert.strictEqual(I.detect([]), 'en'); assert.strictEqual(I.detect(undefined), 'en');
 });
 t('t() sostituisce i segnaposto e ripiega sull’italiano', () => {
   I.setLang('en'); assert.strictEqual(I.t('extend', { d: '3 km' }), 'Search further (up to 3 km)');
