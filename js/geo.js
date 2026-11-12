@@ -37,13 +37,18 @@
   /** Arrotonda a 3 decimali (~100 m): la posizione esatta non viene inviata al servizio dei dati. */
   const roundCoord = (v) => Math.round(v * 1000) / 1000;
 
-  /** Query Overpass: i turet (fontane in ghisa a testa di toro) attorno a un punto. */
-  function overpassQuery(lat, lon, radius) {
-    const r = Math.round(radius + 150);        // margine per compensare l'arrotondamento del centro
+  /** Query Overpass: i punti d'acqua potabile attorno a un punto. kind 'node' (default, veloce) oppure 'area' (aree e relazioni, più lenta). */
+  function overpassQuery(lat, lon, r, kind) {
     const at = '(around:' + r + ',' + roundCoord(lat) + ',' + roundCoord(lon) + ')';
-    // tutti i punti d'acqua potabile pubblici (a Torino sono in gran parte toret, ma molti non hanno il tag fountain=toret) + fontane marcate come potabili
-    // tutti i punti d'acqua potabile (nodi, aree e relazioni): a Torino sono in gran parte toret, ma non tutti hanno il tag fountain=toret
-    return '[out:json][timeout:25];(nwr["amenity"="drinking_water"]' + at + ';nwr["fountain"="toret"]' + at + ';nwr["amenity"="fountain"]["drinking_water"="yes"]' + at + ';nwr["man_made"="water_tap"]["drinking_water"="yes"]' + at + ';);out center body;';
+    const types = kind === 'area' ? ['way', 'relation'] : ['node'];
+    const parts = [];
+    for (const t of types) {
+      parts.push(t + '["amenity"="drinking_water"]' + at);
+      parts.push(t + '["amenity"="fountain"]["drinking_water"="yes"]' + at);
+      parts.push(t + '["fountain"="toret"]' + at);
+      if (t === 'node') parts.push('node["man_made"="water_tap"]["drinking_water"="yes"]' + at);
+    }
+    return '[out:json][timeout:25];(' + parts.join(';') + ';);out center;';
   }
 
   /** Estrae dalla risposta di Overpass solo nodi con coordinate valide. */

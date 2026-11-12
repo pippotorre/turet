@@ -7,15 +7,15 @@
   const t = (k, p) => I18n.t(k, p);
   const fmtDist = (m) => Geo.formatDistance(m, I18n.decimal());
   const TORINO = { lat: 45.0703, lon: 7.6869 };
-  const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.openstreetmap.fr/api/interpreter'];
+  const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.openstreetmap.fr/api/interpreter', 'https://z.overpass-api.de/api/interpreter', 'https://lz4.overpass-api.de/api/interpreter'];
   const ROUTING = 'https://routing.openstreetmap.de/routed-foot/route/v1/foot/';
   const RADII = [1000, 2000, 3500, 5000];             // parte da 1 km, l'utente può estendere fino a 5 km
-  const CACHE_KEY = 'turet.cache.v1', LANG_KEY = 'turet.lang', CACHE_MAX_AGE = 7 * 24 * 3600 * 1000;
+  const CACHE_KEY = 'turet.tiles.v2', LANG_KEY = 'turet.lang', TILE = 0.02, FETCH_R = 6500, FRESH = 3 * 24 * 3600 * 1000, CACHE_MAX_AGE = 60 * 24 * 3600 * 1000;   // si scarica una volta un'area di ~6,5 km attorno alla «tessera» e si filtra in locale
   const isApple = /iphone|ipad|ipod/i.test(navigator.userAgent) || (/macintosh/i.test(navigator.userAgent) && 'ontouchend' in document);
 
   const PINS = 40;
-  const state = { origin: null, turets: [], selected: null, route: null, manual: false, serial: 0, routeAbort: null,
-    status: null, manualKey: 'manual.tap', cached: false, busy: false, radius: 0 };
+  const state = { origin: null, items: [], selected: null, route: null, manual: false, serial: 0, routeAbort: null,
+    all: [], dirty: false, status: null, manualKey: 'manual.tap', cached: false, busy: false, radius: 0 };
   const layers = { me: null, accuracy: null, route: null, pins: new Map() };
 
   /* ---------- lingua ---------- */
@@ -72,7 +72,7 @@
     b.hidden = !state.origin || state.busy || !next;
     if (next) b.textContent = t('extend', { d: fmtDist(next) });
   }
-  function renderFind() { $('find').disabled = state.busy; $('find').textContent = state.busy ? t('searching') : t(state.turets.length ? 'refresh' : 'find'); }
+  function renderFind() { $('find').disabled = state.busy; $('find').textContent = state.busy ? t('searching') : t(state.items.length ? 'refresh' : 'find'); }
   const standalone = () => navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
   function nameOf(x) { const loc = x.tags && x.tags['name:' + I18n.getLang()]; return loc || x.name || t('name.default'); }
 
@@ -101,7 +101,7 @@
   function renderPins() {
     for (const m of layers.pins.values()) map.removeLayer(m);
     layers.pins.clear();
-    const shown = state.turets.slice(0, PINS);      // sulla mappa solo i più vicini: troppi segnaposto sovrapposti non si leggono
+    const shown = state.items.slice(0, PINS);      // sulla mappa solo i più vicini: troppi segnaposto sovrapposti non si leggono
     if (state.selected && !shown.includes(state.selected)) shown.push(state.selected);
     for (const x of shown) {
       const m = L.marker([x.lat, x.lon], { icon: pinIcon(state.selected && state.selected.id === x.id), title: nameOf(x), alt: t('pin.alt', { name: nameOf(x), d: fmtDist(x.distance) }) }).addTo(map);
@@ -112,14 +112,14 @@
 
   function renderList() {
     const list = $('list'); list.replaceChildren();
-    for (const x of state.turets.slice(0, 12)) {
+    for (const x of state.items.slice(0, 12)) {
       const li = document.createElement('li'), b = document.createElement('button'), n = document.createElement('span'), d = document.createElement('small');
       b.type = 'button'; n.textContent = nameOf(x); d.textContent = fmtDist(x.distance);
       b.setAttribute('aria-current', String(!!state.selected && state.selected.id === x.id));
       b.append(n, d); b.addEventListener('click', () => select(x));
       li.append(b); list.append(li);
     }
-    $('others').hidden = state.turets.length < 2;
+    $('others').hidden = state.items.length < 2;
   }
 
   function renderSteps(steps) {
@@ -175,7 +175,7 @@
     const host = new URL(url).hostname;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const r = await timedFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }, 14000);
+        const r = await timedFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }, 20000);
         if (!r.ok) { const e = new Error('http'); e.http = r.status; throw e; }
         return Geo.parseOverpass(await r.json());
       } catch (err) {
@@ -186,22 +186,65 @@
     }
   }
 
-  async function fetchTurets(origin, radius) {
-    const key = Geo.roundCoord(origin.lat) + ',' + Geo.roundCoord(origin.lon) + ',' + radius;
-    const body = 'data=' + encodeURIComponent(Geo.overpassQuery(origin.lat, origin.lon, radius));
-    try {                                                           // tutti i server insieme: vince il primo che risponde
-      const data = await Promise.any(OVERPASS.map((u) => queryOne(u, body)));
-      writeCache(key, data);
-      return { data, cached: false };
-    } catch (agg) {
-      const hit = readCache()[key];
-      if (hit && Date.now() - hit.ts < CACHE_MAX_AGE) return { data: hit.data, cached: true };
+  const slim = (x) => { const tags = {}; for (const k of Object.keys(x.tags || {})) if (k === 'name' || k.indexOf('name:') === 0) tags[k] = x.tags[k]; return { id: x.id, lat: x.lat, lon: x.lon, name: x.name, tags }; };
+  const tileOf = (o) => ({ lat: Math.round(o.lat / TILE) * TILE, lon: Math.round(o.lon / TILE) * TILE });
+  const tileKey = (c) => c.lat.toFixed(2) + ',' + c.lon.toFixed(2);
+
+  // interroga i server a scaglioni (il primo subito, ogni altro 2,5 s dopo se nessuno ha ancora risposto): vince il primo che risponde, senza sommergere i server pubblici
+  function staggered(list, run) {
+    return new Promise((resolve, reject) => {
+      const errors = []; let done = false, failed = 0;
+      list.forEach((item, i) => setTimeout(() => {
+        if (done) return;
+        run(item).then((v) => { if (!done) { done = true; resolve(v); } }, (err) => { errors.push(err); if (++failed === list.length && !done) { done = true; reject({ errors }); } });
+      }, i * 2500));
+    });
+  }
+
+  async function raceQuery(center, kind) {
+    const body = 'data=' + encodeURIComponent(Geo.overpassQuery(center.lat, center.lon, FETCH_R, kind));
+    try { return (await staggered(OVERPASS, (u) => queryOne(u, body))).map(slim); }
+    catch (agg) {
       const errs = (agg && agg.errors) || [];
       const e = new Error('unreachable');
-      e.http = (errs.find((x) => x.http) || {}).http; e.timeout = errs.length && errs.every((x) => x.timeout);
+      e.http = (errs.find((x) => x.http) || {}).http; e.timeout = errs.length > 0 && errs.every((x) => x.timeout);
       e.detail = errs.map((x) => x.host.replace(/^overpass[.-]?/, '').replace(/\.[a-z]+$/, '') + ' ' + x.detail).join(', ');
       throw e;
     }
+  }
+
+  // elenco di riserva fornito con il sito (data/fontane.json, facoltativo): serve se tutti i server pubblici sono fuori uso
+  async function fallbackFile() {
+    try { const r = await timedFetch('data/fontane.json', {}, 8000); if (!r.ok) return null; const d = Geo.parseOverpass(await r.json()); return d.length ? d.map(slim) : null; } catch (e) { return null; }
+  }
+
+  // tutte le fontanelle dell'area attorno a `origin`: dalla copia locale se recente, altrimenti da internet; copia più vecchia o file di riserva se i server non rispondono
+  async function loadArea(origin) {
+    const center = tileOf(origin), key = tileKey(center), hit = readCache()[key];
+    if (hit && Date.now() - hit.ts < FRESH) return { items: hit.data, cached: false };
+    try {
+      const items = await raceQuery(center, 'node');
+      writeCache(key, items);
+      addAreas(center, key);                                        // aree e relazioni: in secondo piano, senza far aspettare
+      return { items, cached: false };
+    } catch (e) {
+      if (hit && Date.now() - hit.ts < CACHE_MAX_AGE) return { items: hit.data, cached: true };
+      const file = await fallbackFile();
+      if (file) return { items: file, cached: true };
+      throw e;
+    }
+  }
+
+  async function addAreas(center, key) {
+    try {
+      const areas = await raceQuery(center, 'area');
+      if (!areas.length) return;
+      const hit = readCache()[key]; if (!hit) return;
+      const known = new Set(hit.data.map((x) => x.id)), extra = areas.filter((x) => !known.has(x.id));
+      if (!extra.length) return;
+      hit.data = hit.data.concat(extra); writeCache(key, hit.data);
+      if (state.origin && tileKey(tileOf(state.origin)) === key) { state.all = state.all.concat(extra); if (state.busy) state.dirty = true; else showResults(false); }
+    } catch (e) { /* facoltativo */ }
   }
 
   async function fetchRoute(from, to, signal) {
@@ -223,7 +266,7 @@
   // inquadratura: partenza, turet scelto e gli altri turet abbastanza vicini, in ogni direzione (non solo quello del percorso)
   function viewPoints(x) {
     const limit = state.radius ? Infinity : Math.max(x.distance * 3, 400);   // dopo «cerca più lontano» si inquadrano tutti i risultati
-    return [state.origin, x, ...state.turets.slice(0, PINS).filter((y) => y.id !== x.id && y.distance <= limit)];
+    return [state.origin, x, ...state.items.slice(0, PINS).filter((y) => y.id !== x.id && y.distance <= limit)];
   }
 
   async function select(x, overview) {
@@ -253,32 +296,42 @@
   }
 
   async function search() {
-    const o = state.origin, mine = ++state.serial, radius = RADII[state.radius];
+    const o = state.origin, mine = ++state.serial;
     updateReport();
     renderOrigin(); fit([o], state.radius ? 15 : 16);   // il punto resta nella parte di mappa non coperta dal pannello
-    //   // senza animazione: altrimenti la fine dell'animazione annulla il successivo fitBounds
     busy(true);
     try {
       state.cached = false;
       setStatus('status.searching');
-      const r = await fetchTurets(o, radius);
+      const area = await loadArea(o);
       if (mine !== state.serial) return;
-      state.cached = r.cached;
-      if (!r.data.length) {
-        state.turets = []; state.selected = null; state.route = null; renderPins(); renderList(); $('result').hidden = true;
-        setStatus('status.none', { meters: radius }, true);
-        if (!RADII[state.radius + 1]) showManual('status.noneManual');
-        return;
-      }
-      state.turets = Geo.sortByDistance(r.data, o).slice(0, 60);
-      state.selected = null;
-      renderPins();
-      await select(state.turets[0], true);
+      state.all = area.items; state.cached = area.cached;
+      await showResults(true);
     } catch (e) {
       const whyKey = !navigator.onLine ? 'why.offline' : e && e.http ? 'why.http' : e && e.timeout ? 'why.timeout' : 'why.unreachable';
       setStatus('status.loadFail', { whyKey, whyParams: { code: e && e.http }, detail: e && e.detail }, true);
       if (e && e.detail) console.warn('Overpass:', e.detail);
-    } finally { busy(false); }
+    } finally { busy(false); if (state.dirty) { state.dirty = false; showResults(false); } }
+  }
+
+  // filtra l'area scaricata sul raggio scelto e mostra il risultato (senza altre richieste: «Cerca più lontano» è istantaneo)
+  async function showResults(inquadra) {
+    const o = state.origin, radius = RADII[state.radius];
+    const within = Geo.sortByDistance(state.all, o).filter((x) => x.distance <= radius);
+    if (!within.length) {
+      state.items = []; state.selected = null; state.route = null; renderPins(); renderList(); $('result').hidden = true;
+      setStatus('status.none', { meters: radius }, true);
+      if (!RADII[state.radius + 1]) showManual('status.noneManual');
+      renderExtend();
+      return;
+    }
+    renderExtend();
+    state.items = within.slice(0, 60);
+    const keep = state.selected && state.items.find((x) => x.id === state.selected.id);
+    if (!inquadra && keep) { renderPins(); renderList(); return; }          // aggiornamento in secondo piano: non si sposta la vista
+    state.selected = null;
+    renderPins();
+    await select(state.items[0], true);
   }
 
   function setOrigin(o) { state.origin = o; state.radius = 0; return search(); }
@@ -315,13 +368,13 @@
   function enableManual(key) { state.manual = true; showManual(key); map.getContainer().style.cursor = 'crosshair'; }
 
   map.on('click', (e) => {
-    if (!state.manual && state.turets.length) return;     // dopo una ricerca i tocchi servono per muovere la mappa
+    if (!state.manual && state.items.length) return;     // dopo una ricerca i tocchi servono per muovere la mappa
     state.manual = false; map.getContainer().style.cursor = '';
     setOrigin({ lat: e.latlng.lat, lon: e.latlng.lng, accuracy: 0, source: 'manual' });
   });
 
   $('find').addEventListener('click', locate);
-  $('extend').addEventListener('click', () => { if (state.origin && RADII[state.radius + 1]) { state.radius++; search(); } });
+  $('extend').addEventListener('click', () => { if (state.origin && RADII[state.radius + 1]) { state.radius++; renderExtend(); renderOrigin(); fit([state.origin], 15); showResults(true); } });
   $('goto-torino').addEventListener('click', () => { map.setView([TORINO.lat, TORINO.lon], 15, { animate: false }); state.manual = true; map.getContainer().style.cursor = 'crosshair'; showManual('manual.tap'); });
   for (const b of document.querySelectorAll('.lang button')) b.addEventListener('click', () => setLanguage(b.dataset.lang, true));
 

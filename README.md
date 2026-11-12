@@ -30,6 +30,11 @@ Per aggiornare dopo una modifica a CSS/JS cambia il numero `?v=` in `index.html`
 
 **Dati:** i punti d'acqua potabile di OpenStreetMap (`amenity=drinking_water`, più le `amenity=fountain` con `drinking_water=yes`). A Torino sono quasi tutti toret, ma non tutti hanno il tag `fountain=toret`, quindi cercare solo quello ne faceva perdere molti. Il Comune non pubblica un elenco dei toret tra gli open data (aperTO). L'app è completa quanto lo è la mappatura: se manca un punto, si aggiunge su openstreetmap.org e compare in app senza altre modifiche.
 
+## Affidabilità dei dati
+- L'app scarica **una volta** le fontanelle di un'area di circa 6,5 km attorno a te (a «tessere» di ~2 km) e le tiene nel telefono: la copia è considerata fresca per 3 giorni, e fino a 60 giorni viene usata se i server non rispondono. «Cerca più lontano» filtra in locale, senza altre richieste.
+- I server Overpass vengono interrogati a scaglioni (il primo subito, gli altri solo se tardano), non tutti insieme.
+- **Elenco di riserva (facoltativo):** `bash tools/scarica-dati.sh` salva `data/fontane.json`; caricalo sul sito accanto a `index.html`. L'app lo usa solo se nessun server risponde e non c'è una copia nel telefono.
+
 ## Privacy
 La posizione non viene salvata né inviata a un server del progetto: resta nel browser. Ai servizi esterni vanno solo un punto arrotondato (ricerca) e le due coordinate del tragitto (percorso). Nel browser si salva solo la copia degli ultimi risultati (localStorage).
 

@@ -20,9 +20,11 @@ t('walkMinutes e formatDuration', () => {
   assert.strictEqual(G.walkMinutes(800), 10); assert.strictEqual(G.walkMinutes(5), 1);
   assert.strictEqual(G.formatDuration(45), '45 min'); assert.strictEqual(G.formatDuration(65), '1 h 5 min'); assert.strictEqual(G.formatDuration(120), '2 h');
 });
-t('overpassQuery arrotonda il centro e allarga il raggio', () => {
-  const q = G.overpassQuery(45.070312, 7.686845, 1000);
-  assert(q.includes('(around:1150,45.07,7.687)'), q); assert(q.includes('"amenity"="drinking_water"')); assert(q.includes('nwr')); assert(q.includes('out center'));
+t('query Overpass: nodi veloci, aree a parte', () => {
+  const q = G.overpassQuery(45.0703, 7.6869, 6500), a = G.overpassQuery(45.0703, 7.6869, 6500, 'area');
+  assert(q.includes('node["amenity"="drinking_water"]') && !q.includes('way[') && q.includes('out center'));
+  assert(a.includes('way["amenity"="drinking_water"]') && a.includes('relation[') && !a.includes('node['));
+  assert(q.includes('around:6500,45.07,7.687') || q.includes('around:6500,45.07,7.687'.replace('7.687','7.687')), q);
 });
 t('parseOverpass scarta elementi non validi', () => {
   const r = G.parseOverpass({ elements: [{ type: 'node', id: 1, lat: 45, lon: 7, tags: { name: 'Toret di prova' } }, { type: 'way', id: 2 }, { type: 'node', id: 3, lat: 'x', lon: 7 }, { type: 'node', id: 4, lat: 45.1, lon: 7.1 }] });
