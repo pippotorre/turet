@@ -73,3 +73,16 @@ t('mapsLinks', () => {
   assert(G.mapsLinks({ lat: 1, lon: 2 }, { lat: 3, lon: 4 }, 'fr').google.endsWith('&hl=fr'));
 });
 console.log('\n' + n + ' prove superate');
+t('tessere: identificatori e righe compatte', () => {
+  assert.strictEqual(G.tileId(45.07, 7.68), '180_30');
+  assert.deepStrictEqual(G.tileIds(45.07, 7.68, 6500), ['180_30', '180_31']);
+  const tiles = G.itemsToTiles([{ id: 'node5', lat: 45.123456, lon: 7.7, name: 'A' }, { id: 'node5', lat: 45.123456, lon: 7.7, name: 'A' }, { id: 'way6', lat: 45.2, lon: 7.9, name: '' }]);
+  assert.deepStrictEqual(tiles['180_30'], [['n5', 45.12346, 7.7, 'A']]);
+  assert.deepStrictEqual(G.rowsToItems(tiles['180_31']).map((x) => x.id), ['way6']);
+  assert.deepStrictEqual(G.rowsToItems([['x1', 1, 2], ['n1', 'a', 2], null]), []);
+});
+t('query Overpass su rettangolo: nodi, aree e relazioni', () => {
+  const q = G.overpassBbox(44, 7, 45, 8);
+  assert(q.includes('node["amenity"="drinking_water"](44,7,45,8)') && q.includes('way[') && q.includes('relation[') && q.includes('timeout:180'));
+});
+console.log('\n' + n + ' prove superate');

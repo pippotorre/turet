@@ -37,18 +37,59 @@
   /** Arrotonda a 3 decimali (~100 m): la posizione esatta non viene inviata al servizio dei dati. */
   const roundCoord = (v) => Math.round(v * 1000) / 1000;
 
+  const CLAUSES = [['amenity', 'drinking_water'], ['amenity', 'fountain', 'drinking_water', 'yes'], ['fountain', 'toret']];
+  function clauses(types, where) {
+    const parts = [];
+    for (const t of types) {
+      for (const c of CLAUSES) parts.push(t + '["' + c[0] + '"="' + c[1] + '"]' + (c[2] ? '["' + c[2] + '"="' + c[3] + '"]' : '') + where);
+      if (t === 'node') parts.push('node["man_made"="water_tap"]["drinking_water"="yes"]' + where);
+    }
+    return parts;
+  }
+
   /** Query Overpass: i punti d'acqua potabile attorno a un punto. kind 'node' (default, veloce) oppure 'area' (aree e relazioni, più lenta). */
   function overpassQuery(lat, lon, r, kind) {
     const at = '(around:' + r + ',' + roundCoord(lat) + ',' + roundCoord(lon) + ')';
-    const types = kind === 'area' ? ['way', 'relation'] : ['node'];
-    const parts = [];
-    for (const t of types) {
-      parts.push(t + '["amenity"="drinking_water"]' + at);
-      parts.push(t + '["amenity"="fountain"]["drinking_water"="yes"]' + at);
-      parts.push(t + '["fountain"="toret"]' + at);
-      if (t === 'node') parts.push('node["man_made"="water_tap"]["drinking_water"="yes"]' + at);
+    return '[out:json][timeout:25];(' + clauses(kind === 'area' ? ['way', 'relation'] : ['node'], at).join(';') + ';);out center;';
+  }
+
+  /** Stessa ricerca su un rettangolo (sud, ovest, nord, est): serve allo script che prepara i file delle tessere. */
+  function overpassBbox(s, w, n, e) {
+    return '[out:json][timeout:180];(' + clauses(['node', 'way', 'relation'], '(' + [s, w, n, e].join(',') + ')').join(';') + ';);out center;';
+  }
+
+  /* ---- tessere di dati pronte (data/t/<riga>_<colonna>.json): la griglia è di 0,25° (~20-28 km) ---- */
+  const GRID = 4;
+  const tileId = (lat, lon) => Math.floor(lat * GRID) + '_' + Math.floor(lon * GRID);
+  /** Identificatori delle tessere che coprono il cerchio di raggio r (m) attorno a un punto. */
+  function tileIds(lat, lon, r) {
+    const dLat = r / 111000, dLon = r / (111000 * Math.max(0.2, Math.cos(rad(lat)))), out = [];
+    for (let y = Math.floor((lat - dLat) * GRID); y <= Math.floor((lat + dLat) * GRID); y++)
+      for (let x = Math.floor((lon - dLon) * GRID); x <= Math.floor((lon + dLon) * GRID); x++) out.push(y + '_' + x);
+    return out;
+  }
+  const KIND = { n: 'node', w: 'way', r: 'relation' }, KIND_SHORT = { node: 'n', way: 'w', relation: 'r' };
+  /** Righe compatte [id, lat, lon, nome] → oggetti come quelli di parseOverpass. */
+  function rowsToItems(rows) {
+    const out = [];
+    for (const r of Array.isArray(rows) ? rows : []) {
+      if (!Array.isArray(r) || !Number.isFinite(r[1]) || !Number.isFinite(r[2]) || !KIND[String(r[0])[0]]) continue;
+      const name = String(r[3] || '').slice(0, 80);
+      out.push({ id: KIND[r[0][0]] + r[0].slice(1), lat: r[1], lon: r[2], name, tags: name ? { name } : {} });
     }
-    return '[out:json][timeout:25];(' + parts.join(';') + ';);out center;';
+    return out;
+  }
+  /** Elementi di parseOverpass → righe compatte (5 decimali, ~1 m), raggruppate per tessera. */
+  function itemsToTiles(items) {
+    const tiles = {}, seen = new Set();
+    for (const x of items) {
+      if (seen.has(x.id)) continue; seen.add(x.id);
+      const m = /^(node|way|relation)(\d+)$/.exec(x.id); if (!m) continue;
+      const row = [KIND_SHORT[m[1]] + m[2], Math.round(x.lat * 1e5) / 1e5, Math.round(x.lon * 1e5) / 1e5];
+      if (x.name) row.push(x.name.slice(0, 60));
+      (tiles[tileId(x.lat, x.lon)] = tiles[tileId(x.lat, x.lon)] || []).push(row);
+    }
+    return tiles;
   }
 
   /** Estrae dalla risposta di Overpass solo nodi con coordinate valide. */
@@ -93,5 +134,5 @@
     };
   }
 
-  return { haversine, sortByDistance, formatDistance, walkMinutes, formatDuration, roundCoord, overpassQuery, parseOverpass, instruction, mapsLinks };
+  return { haversine, sortByDistance, formatDistance, walkMinutes, formatDuration, roundCoord, overpassQuery, overpassBbox, tileId, tileIds, rowsToItems, itemsToTiles, parseOverpass, instruction, mapsLinks };
 });

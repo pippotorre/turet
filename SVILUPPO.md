@@ -6,7 +6,7 @@ Diario del progetto: decisioni prese, verifiche, domande aperte. Si aggiorna a o
 
 Web app installabile (PWA, anche su Google Play come app impacchettata) che trova il **toret** più vicino,
 la fontanella torinese in ghisa a testa di toro, e disegna il percorso a piedi.
-Indirizzo: **https://www.entratadisicurezza.com/turet/** (Tophost).
+Indirizzo: **https://turet.entratadisicurezza.com/** (GitHub Pages, dominio personalizzato).
 
 ## Decisioni prese
 
@@ -53,6 +53,7 @@ Indirizzo: **https://www.entratadisicurezza.com/turet/** (Tophost).
 
 - [ ] Play Console: «Gestisci traduzioni» → aggiungere spagnolo e tedesco con i testi di `store/scheda-play-store.md`.
 
-- [ ] Caricare su Tophost `index.html`, `privacy.html`, `sw.js`, `js/app.js` aggiornati.
 - [ ] Aggiornare il modulo «Sicurezza dei dati» nella Play Console (Interazioni con l'app → Analisi).
 - [ ] Dopo qualche giorno, controllare su GoatCounter che arrivino visite ed eventi.
+
+| 14/11/2026 | Spostamento su GitHub Pages (turet.entratadisicurezza.com). Dati a tessere (`data/t/`) rigenerati ogni settimana da un'azione di GitHub; il service worker ora prende prima la rete. Il vecchio indirizzo su Tophost mostra una pagina di trasferimento con redirect dopo 4 secondi. |

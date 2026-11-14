@@ -10,16 +10,17 @@ Web app (installabile come app su Android e iPhone) che trova il **toret** — l
 - Funziona offline in parte: l'app si apre e ricorda gli ultimi turet visti per la zona (7 giorni); mappe e percorsi richiedono internet.
 
 ## Pubblicazione
-Sito statico: basta copiare i file in una cartella raggiungibile in **HTTPS** (la posizione del telefono funziona solo su HTTPS), per esempio `https://www.entratadisicurezza.com/turet/`. Va bene anche GitHub Pages. Non servono PHP, database o chiavi.
-Per aggiornare dopo una modifica a CSS/JS cambia il numero `?v=` in `index.html` e in `sw.js`, e `VERSION` in `sw.js`, altrimenti i telefoni continuano a usare la copia vecchia.
+Il sito è statico e si pubblica su **GitHub Pages** all'indirizzo `https://turet.entratadisicurezza.com/` (workflow `.github/workflows/pubblica.yml`, impostazione una tantum in [docs/PAGES.md](docs/PAGES.md)). Non servono PHP, database o chiavi.
+Per aggiornare dopo una modifica a CSS/JS cambia il numero `?v=` in `index.html` e in `sw.js`, e `VERSION` in `sw.js`: il service worker prende comunque prima la rete, quindi gli utenti online vedono subito la versione nuova.
 
 ## Struttura
 - `index.html`, `css/app.css`, `js/app.js` (interfaccia e flusso), `js/geo.js` (funzioni pure: distanze, query, istruzioni), `js/i18n.js` (traduzioni IT/EN/FR/ES/DE), `privacy.html`.
 - `vendor/leaflet/` — Leaflet 1.9.4 (licenza BSD-2, nell'intestazione del file), niente CDN.
 - `manifest.webmanifest`, `sw.js`, `img/` — installazione come app e icone (originali).
+- `data/t/` — tessere di dati generate dal workflow; `.github/workflows/pubblica.yml` — pubblicazione e aggiornamento settimanale.
 - `test/` — prove senza dipendenze: `node test/geo.test.js && node test/i18n.test.js`.
 - `art/` — illustrazione del toret (`toret.svg`) e script che genera icone e grafica dello store (`python3 art/build.py`, richiede Playwright).
-- `store/`, `docs/`, `tools/` — materiali, guida completa per Google Play ([docs/ANDROID.md](docs/ANDROID.md)) e controllo del sito (`bash tools/verifica-sito.sh URL`). Non servono sul sito: su Tophost si caricano solo `index.html`, `privacy.html`, `manifest.webmanifest`, `sw.js`, `css/`, `js/`, `img/`, `vendor/`.
+- `store/`, `docs/`, `tools/` — materiali, guida completa per Google Play ([docs/ANDROID.md](docs/ANDROID.md)) e controllo del sito (`bash tools/verifica-sito.sh URL`). Non vengono pubblicati sul sito.
 
 ## Servizi esterni e limiti
 | Servizio | A cosa serve | Note |
@@ -33,7 +34,7 @@ Per aggiornare dopo una modifica a CSS/JS cambia il numero `?v=` in `index.html`
 ## Affidabilità dei dati
 - L'app scarica **una volta** le fontanelle di un'area di circa 6,5 km attorno a te (a «tessere» di ~2 km) e le tiene nel telefono: la copia è considerata fresca per 3 giorni, e fino a 60 giorni viene usata se i server non rispondono. «Cerca più lontano» filtra in locale, senza altre richieste.
 - I server Overpass vengono interrogati a scaglioni (il primo subito, gli altri solo se tardano), non tutti insieme.
-- **Elenco di riserva (facoltativo):** `bash tools/scarica-dati.sh` salva `data/fontane.json`; caricalo sul sito accanto a `index.html`. L'app lo usa solo se nessun server risponde e non c'è una copia nel telefono.
+- **Dati pronti (`data/t/`):** ogni lunedì un'azione di GitHub scarica da OpenStreetMap le fontanelle della zona con `node tools/genera-tessere.mjs` e le salva in piccoli file a griglia di 0,25° (`data/t/<riga>_<colonna>.json`, più `index.json`). L'app li carica per primi: i risultati arrivano subito e restano disponibili anche se i server pubblici sono fuori uso; i server pubblici aggiungono poi le novità.
 
 ## Privacy
 La posizione non viene salvata né inviata a un server del progetto: resta nel browser. Ai servizi esterni vanno solo un punto arrotondato (ricerca) e le due coordinate del tragitto (percorso). Nel browser si salva solo la copia degli ultimi risultati (localStorage).

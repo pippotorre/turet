@@ -1,5 +1,5 @@
 /* Turet — service worker: salva il «guscio» dell'app (pagina, stili, script, Leaflet, icone) per aprirla anche con poca rete.
- * Mappe, dati dei turet e percorsi arrivano sempre da internet e non vengono mai salvati qui (i dati dei turet li ricorda l'app in localStorage).
+ * Strategia: rete per prima, copia salvata solo offline. Mappe e percorsi arrivano sempre da internet e non si salvano qui.
  * Per forzare l'aggiornamento delle copie salvate cambia VERSION. */
 const VERSION = 'turet-v17';
 const SHELL = ['./', 'index.html', 'css/app.css?v=17', 'js/i18n.js?v=17', 'js/geo.js?v=17', 'js/app.js?v=17', 'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css', 'img/icon-192.png', 'img/toret.svg', 'manifest.webmanifest'];
@@ -13,9 +13,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;            // tile, Overpass, routing: sempre dalla rete
-  if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then((r) => { if (r.ok) { const c = r.clone(); caches.open(VERSION).then((x) => x.put('index.html', c)); } return r; }).catch(() => caches.match('index.html')));
-    return;
-  }
-  e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((r) => { if (r.ok) { const c = r.clone(); caches.open(VERSION).then((x) => x.put(req, c)); } return r; })));
+  // prima la rete (così l'app è sempre quella pubblicata), la copia salvata solo se non c'è connessione
+  e.respondWith(fetch(req).then((r) => { if (r.ok) { const c = r.clone(); caches.open(VERSION).then((x) => x.put(req.mode === 'navigate' ? 'index.html' : req, c)); } return r; })
+    .catch(() => caches.match(req.mode === 'navigate' ? 'index.html' : req)));
 });

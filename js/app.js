@@ -213,24 +213,33 @@
     }
   }
 
-  // elenco di riserva fornito con il sito (data/fontane.json, facoltativo): serve se tutti i server pubblici sono fuori uso
-  async function fallbackFile() {
-    try { const r = await timedFetch('data/fontane.json', {}, 8000); if (!r.ok) return null; const d = Geo.parseOverpass(await r.json()); return d.length ? d.map(slim) : null; } catch (e) { return null; }
+  // tessere di dati pronte, pubblicate con il sito (data/t/*.json, rigenerate ogni settimana): arrivano in un attimo e funzionano anche se i server pubblici sono fuori uso
+  let staticIndex = null;
+  async function loadStatic(origin) {
+    try {
+      if (!staticIndex) { const r = await timedFetch('data/t/index.json', {}, 8000); if (!r.ok) return []; const j = await r.json(); staticIndex = j.tiles || {}; if ($('ver')) $('ver').textContent = 'v17 · ' + j.generated; }
+      const ids = Geo.tileIds(origin.lat, origin.lon, FETCH_R).filter((id) => staticIndex[id]);
+      const parts = await Promise.all(ids.map(async (id) => { try { const r = await timedFetch('data/t/' + id + '.json', {}, 10000); return r.ok ? Geo.rowsToItems(await r.json()) : []; } catch (e) { return []; } }));
+      return [].concat(...parts);
+    } catch (e) { return []; }
   }
 
-  // tutte le fontanelle dell'area attorno a `origin`: dalla copia locale se recente, altrimenti da internet; copia più vecchia o file di riserva se i server non rispondono
+  const merge = (base, extra) => { const known = new Set(base.map((x) => x.id)); return base.concat(extra.filter((x) => !known.has(x.id))); };
+
+  // tutte le fontanelle dell'area attorno a `origin`: subito dalle tessere pronte; i server pubblici aggiungono le novità (se non rispondono, restano le tessere)
   async function loadArea(origin) {
     const center = tileOf(origin), key = tileKey(center), hit = readCache()[key];
-    if (hit && Date.now() - hit.ts < FRESH) return { items: hit.data, cached: false };
-    try {
-      const items = await raceQuery(center, 'node');
-      writeCache(key, items);
-      addAreas(center, key);                                        // aree e relazioni: in secondo piano, senza far aspettare
-      return { items, cached: false };
-    } catch (e) {
+    const fresh = hit && Date.now() - hit.ts < FRESH;
+    const stat = await loadStatic(origin);
+    if (fresh) return { items: merge(hit.data, stat), cached: false };
+    const live = raceQuery(center, 'node').then((items) => { writeCache(key, items); addAreas(center, key); return items; });
+    if (stat.length) {
+      live.then((items) => { if (state.origin && tileKey(tileOf(state.origin)) === key) { state.all = merge(state.all, items); if (state.busy) state.dirty = true; else showResults(false); } }, () => {});
+      return { items: hit ? merge(hit.data, stat) : stat, cached: false };
+    }
+    try { return { items: await live, cached: false }; }
+    catch (e) {
       if (hit && Date.now() - hit.ts < CACHE_MAX_AGE) return { items: hit.data, cached: true };
-      const file = await fallbackFile();
-      if (file) return { items: file, cached: true };
       throw e;
     }
   }
@@ -243,7 +252,7 @@
       const known = new Set(hit.data.map((x) => x.id)), extra = areas.filter((x) => !known.has(x.id));
       if (!extra.length) return;
       hit.data = hit.data.concat(extra); writeCache(key, hit.data);
-      if (state.origin && tileKey(tileOf(state.origin)) === key) { state.all = state.all.concat(extra); if (state.busy) state.dirty = true; else showResults(false); }
+      if (state.origin && tileKey(tileOf(state.origin)) === key) { state.all = merge(state.all, extra); if (state.busy) state.dirty = true; else showResults(false); }
     } catch (e) { /* facoltativo */ }
   }
 
@@ -390,6 +399,8 @@
   });
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
   if (isApple && !standalone()) { const b = $('install'); b.hidden = false; b.disabled = true; b.style.textDecoration = 'none'; }
+
+  if ($('ver')) $('ver').textContent = 'v17';
 
   /* ---------- avvio ---------- */
   renderNet();
