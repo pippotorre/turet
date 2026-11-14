@@ -57,3 +57,4 @@ Indirizzo: **https://turet.entratadisicurezza.com/** (GitHub Pages, dominio pers
 - [ ] Dopo qualche giorno, controllare su GoatCounter che arrivino visite ed eventi.
 
 | 14/11/2026 | Spostamento su GitHub Pages (turet.entratadisicurezza.com). Dati a tessere (`data/t/`) rigenerati ogni settimana da un'azione di GitHub; il service worker ora prende prima la rete. Il vecchio indirizzo su Tophost mostra una pagina di trasferimento con redirect dopo 4 secondi. |
+| 14/11/2026 | Tessere statiche come fonte principale: dentro la zona e con dati < 10 giorni nessuna chiamata a Overpass (che resta per fuori zona, dati vecchi o mancanti). |

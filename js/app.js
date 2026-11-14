@@ -213,29 +213,38 @@
     }
   }
 
-  // tessere di dati pronte, pubblicate con il sito (data/t/*.json, rigenerate ogni settimana): arrivano in un attimo e funzionano anche se i server pubblici sono fuori uso
+  // tessere di dati pronte, pubblicate con il sito (data/t/*.json, rigenerate ogni settimana): arrivano in un attimo e non pesano sui server pubblici
+  const STATIC_MAX_AGE = 10 * 24 * 3600 * 1000;       // oltre 10 giorni senza rigenerazione si torna a interrogare anche i server
   let staticIndex = null;
   async function loadStatic(origin) {
     try {
-      if (!staticIndex) { const r = await timedFetch('data/t/index.json', {}, 8000); if (!r.ok) return []; const j = await r.json(); staticIndex = j.tiles || {}; if ($('ver')) $('ver').textContent = 'v17 · ' + j.generated; }
-      const ids = Geo.tileIds(origin.lat, origin.lon, FETCH_R).filter((id) => staticIndex[id]);
+      if (!staticIndex) {
+        const r = await timedFetch('data/t/index.json', {}, 8000); if (!r.ok) return { items: [], trusted: false };
+        staticIndex = await r.json();
+        if ($('ver')) $('ver').textContent = 'v18 · ' + staticIndex.generated;
+      }
+      const tiles = staticIndex.tiles || {}, bb = staticIndex.bbox, age = Date.now() - Date.parse(staticIndex.generated || 0);
+      // «affidabili»: l'origine è dentro la zona coperta e i dati sono recenti → niente richieste ai server pubblici
+      const trusted = !!bb && origin.lat >= bb[0] && origin.lat <= bb[2] && origin.lon >= bb[1] && origin.lon <= bb[3] && age >= 0 && age < STATIC_MAX_AGE;
+      const ids = Geo.tileIds(origin.lat, origin.lon, FETCH_R).filter((id) => tiles[id]);
       const parts = await Promise.all(ids.map(async (id) => { try { const r = await timedFetch('data/t/' + id + '.json', {}, 10000); return r.ok ? Geo.rowsToItems(await r.json()) : []; } catch (e) { return []; } }));
-      return [].concat(...parts);
-    } catch (e) { return []; }
+      return { items: [].concat(...parts), trusted };
+    } catch (e) { return { items: [], trusted: false }; }
   }
 
   const merge = (base, extra) => { const known = new Set(base.map((x) => x.id)); return base.concat(extra.filter((x) => !known.has(x.id))); };
 
-  // tutte le fontanelle dell'area attorno a `origin`: subito dalle tessere pronte; i server pubblici aggiungono le novità (se non rispondono, restano le tessere)
+  // tutte le fontanelle dell'area attorno a `origin`. Dove ci sono le tessere pronte e recenti bastano quelle (nessuna richiesta ai server pubblici, che hanno limiti d'uso);
+  // fuori zona, o se le tessere sono vecchie o mancano, si interrogano i server e la copia nel telefono
   async function loadArea(origin) {
-    const center = tileOf(origin), key = tileKey(center), hit = readCache()[key];
-    const fresh = hit && Date.now() - hit.ts < FRESH;
     const stat = await loadStatic(origin);
-    if (fresh) return { items: merge(hit.data, stat), cached: false };
+    if (stat.trusted) return { items: stat.items, cached: false };
+    const center = tileOf(origin), key = tileKey(center), hit = readCache()[key];
+    if (hit && Date.now() - hit.ts < FRESH) return { items: merge(hit.data, stat.items), cached: false };
     const live = raceQuery(center, 'node').then((items) => { writeCache(key, items); addAreas(center, key); return items; });
-    if (stat.length) {
+    if (stat.items.length) {
       live.then((items) => { if (state.origin && tileKey(tileOf(state.origin)) === key) { state.all = merge(state.all, items); if (state.busy) state.dirty = true; else showResults(false); } }, () => {});
-      return { items: hit ? merge(hit.data, stat) : stat, cached: false };
+      return { items: hit ? merge(hit.data, stat.items) : stat.items, cached: false };
     }
     try { return { items: await live, cached: false }; }
     catch (e) {
@@ -400,7 +409,7 @@
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
   if (isApple && !standalone()) { const b = $('install'); b.hidden = false; b.disabled = true; b.style.textDecoration = 'none'; }
 
-  if ($('ver')) $('ver').textContent = 'v17';
+  if ($('ver')) $('ver').textContent = 'v18';
 
   /* ---------- avvio ---------- */
   renderNet();
