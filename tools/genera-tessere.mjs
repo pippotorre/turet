@@ -18,17 +18,20 @@ const [S, W, N, E] = (process.argv[2] || BBOX).split(',').map(Number);
 if (![S, W, N, E].every(Number.isFinite) || S >= N || W >= E) { console.error('Rettangolo non valido: sud,ovest,nord,est'); process.exit(2); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+let good = 0;                                            // il server che ha risposto per ultimo si prova per primo
 async function ask(query) {
   let last = '';
   for (let round = 0; round < 4; round++) {
-    for (const url of SERVERS) {
+    for (let k = 0; k < SERVERS.length; k++) {
+      const i = (good + k) % SERVERS.length, url = SERVERS[i];
+      const fail = (why) => { last = url + ' ' + why; console.log('  non va: ' + last); };
       try {
         const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'fontanelle-tessere/1.0 (github.com/pippotorre)' }, body: 'data=' + encodeURIComponent(query), signal: AbortSignal.timeout(240000) });
-        if (!r.ok) { last = url + ' ' + r.status; await sleep(PAUSE); continue; }
+        if (!r.ok) { fail(r.status); await sleep(PAUSE); continue; }
         const j = await r.json();
-        if (j.remark && /error|timed out|out of memory/i.test(j.remark)) { last = url + ' ' + j.remark; await sleep(PAUSE); continue; }
-        return j;
-      } catch (e) { last = url + ' ' + e.message; await sleep(PAUSE); }
+        if (j.remark && /error|timed out|out of memory/i.test(j.remark)) { fail(j.remark); await sleep(PAUSE); continue; }
+        good = i; return j;
+      } catch (e) { fail(e.message); await sleep(PAUSE); }
     }
     await sleep(15000 * (round + 1));
   }
