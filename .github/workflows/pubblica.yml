@@ -18,10 +18,11 @@ jobs:
       - name: Prove automatiche
         run: node test/geo.test.js && node test/i18n.test.js
       - name: Aggiorna i dati (ogni settimana, oppure se mancano)
+        id: dati
         if: github.event_name != 'push' || hashFiles('data/t/index.json') == ''
         run: node tools/genera-tessere.mjs
       - name: Salva i dati nel repository
-        if: github.event_name != 'push' || hashFiles('data/t/index.json') == ''
+        if: steps.dati.outcome == 'success'
         run: |
           git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
           git add data/t
