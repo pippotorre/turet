@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="css/app.css?v=18">
   <!-- Statistiche di visita senza cookie (GoatCounter): conta le pagine viste e l'uso di «Installa l'app», nessun dato personale. -->
-  <script>window.goatcounter = { path: function () { return location.pathname.replace(/index\.html$/, ''); } };</script>
+  <script>window.goatcounter = { path: function () { var p = location.pathname.replace(/index\.html$/, ''); return p.indexOf('/turet/') === 0 ? p : '/turet' + p; } };</script>
   <script data-goatcounter="https://entratadisicurezza.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
